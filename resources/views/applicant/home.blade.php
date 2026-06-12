@@ -31,7 +31,7 @@
 <body>
 
     <header class="navbar">
-        <div class="logo">KICAUX</div>
+        <div class="logo">Hiring</div>
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" style="background:none; border:none; color:white; font-size:16px;">Logout</button>
