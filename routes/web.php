@@ -5,8 +5,18 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\JobVacancyController;
 
-// 1. Rute Default (Arahkan otomatis ke halaman login)
+use Illuminate\Support\Facades\Auth;
+
+// 1. Rute Default Pintar (Deteksi sesi login)
 Route::get('/', function () {
+    // Jika sudah login, arahkan sesuai rolenya
+    if (Auth::check()) {
+        $role = Auth::user()->role;
+        if ($role === 'applicant') return redirect('/applicant/home');
+        if ($role === 'employer') return redirect('/employer/dashboard');
+    }
+    
+    // Jika belum login, arahkan ke halaman login
     return redirect('/login');
 });
 
@@ -32,22 +42,32 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', function () { return "Dashboard Admin"; });
     });
 
-    // --- AREA APPLICANT ---
+// --- AREA APPLICANT ---
     Route::middleware('role:applicant')->prefix('applicant')->group(function () {
-        Route::get('/home', function () { 
-            return view('applicant.home'); 
+        Route::get('/home', function () { return view('applicant.home'); });
+        
+        // Rute baru untuk halaman profil Applicant
+        Route::get('/profile', function () { 
+            $profile = \App\Models\ApplicantProfile::where('user_id', Auth::id())->first();
+            return view('applicant.profile', compact('profile')); 
         });
     });
 
-    // --- AREA EMPLOYER ---
+// --- AREA EMPLOYER ---
     Route::middleware('role:employer')->prefix('employer')->group(function () {
-        Route::get('/dashboard', function () { 
-            return view('employer.dashboard'); 
+        Route::get('/dashboard', function () { return view('employer.dashboard'); });
+        
+        // Rute baru untuk halaman profil Employer
+        Route::get('/profile', function () { 
+            $profile = \App\Models\EmployerProfile::where('user_id', Auth::id())->first();
+            return view('employer.profile', compact('profile')); 
         });
+        
+        // ... (rute jobs lainnya biarkan saja) ...
+    });
         
         // CRUD Lowongan
         Route::post('/jobs', [JobVacancyController::class, 'store'])->name('jobs.store');
         Route::put('/jobs/{id}', [JobVacancyController::class, 'update'])->name('jobs.update');
         Route::delete('/jobs/{id}', [JobVacancyController::class, 'destroy'])->name('jobs.destroy');
-    });
 });
