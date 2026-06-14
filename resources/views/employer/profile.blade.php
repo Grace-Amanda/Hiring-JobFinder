@@ -90,9 +90,9 @@
 
                 <div class="form-group">
                     <label>Upload Dokumen Legal / NIB (PDF)</label>
-                    <input type="file" name="document_legal" accept=".pdf">
-                    @if(isset($profile->document_legal))
-                        <small style="color:#4caf50;"><i class="fas fa-check"></i> Legal sudah terunggah.</small>
+                    <input type="file" name="document_nib" accept=".pdf">
+                    @if(isset($profile->document_nib))
+                        <small style="color:#4caf50;"><i class="fas fa-check"></i> NIB sudah terunggah.</small>
                     @endif
                 </div>
 

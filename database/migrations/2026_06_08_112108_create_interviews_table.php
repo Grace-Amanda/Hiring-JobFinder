@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('schedule_date');
             $table->time('schedule_time');
             $table->string('location_or_link'); 
-            $table->enum('status', ['scheduled', 'completed', 'cancelled'])->default('scheduled');
+            $table->enum('status', ['scheduled', 'completed', 'canceled'])->default('scheduled');
             $table->timestamps();
         });
     }

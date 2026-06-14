@@ -107,6 +107,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Upload Ijazah (PDF max 2MB)</label>
+                    <input type="file" name="document_ijazah" accept=".pdf">
+                    @if(isset($profile->document_ijazah))
+                        <small style="color:#4caf50;"><i class="fas fa-check"></i> Ijazah sudah terunggah.</small>
+                    @endif
+                </div>
+
+                <div class="form-group">
                     <label>Upload CV (PDF max 2MB)</label>
                     <input type="file" name="document_cv" accept=".pdf">
                     @if(isset($profile->document_cv))
