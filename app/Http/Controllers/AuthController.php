@@ -112,11 +112,10 @@ class AuthController extends Controller
      * Memproses Logout
      */
     public function logout(Request $request)
-    {
-        // Hapus token API saat ini jika ada
-        if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
-        }
+        {
+        // Gunakan Nullsafe Operator (?->) bawaan PHP 8
+        // Ini memastikan fungsi delete() hanya dijalankan jika currentAccessToken() tidak kosong
+        $request->user()?->currentAccessToken()?->delete();
 
         Auth::logout();
 
