@@ -93,14 +93,14 @@ class AuthController extends Controller
             ApplicantProfile::create([
                 'user_id' => $user->id,
                 'full_name' => $user->name,
-                'status' => 'active_searching',
+                'status' => 'active',
                 'rating' => 0.00
             ]);
         } else {
             EmployerProfile::create([
                 'user_id' => $user->id,
                 'company_name' => $user->name,
-                'status' => 'active_searching'
+                'status' => 'active'
             ]);
         }
 

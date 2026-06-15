@@ -99,6 +99,7 @@
         <div class="desktop-menu">
             <a href="{{ url('/applicant/home') }}" class="active">Discover</a>
             <a href="{{ route('messages.index') }}">Messages</a>
+            <a href="{{ url('/applicant/calendar') }}">Calendar</a>
             <a href="{{ url('/applicant/profile') }}">Profile</a>
         </div>
     </header>
