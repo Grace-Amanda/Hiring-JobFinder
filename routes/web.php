@@ -35,7 +35,8 @@ Route::middleware('auth')->group(function () {
     // Fitur Global (Bisa dipakai semua role)
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/messages', function () { return view('chat.index'); })->name('messages.index');
+    Route::get('/messages', function () { return view('message'); })->name('messages.index');
+    
 
     // --- AREA ADMIN ---
     Route::middleware('role:admin')->prefix('admin')->group(function () {
