@@ -4,197 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hiring - Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 0; }
-        .auth-card { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(255, 81, 47, 0.3); }
-        .auth-card h2 { text-align: center; color: #ff512f; margin-top: 0; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .form-group input[type="file"] { padding: 7px; font-size: 13px; }
-        .btn-submit { width: 100%; padding: 12px; background: linear-gradient(90deg, #ff512f, #f9d423); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .text-center { text-align: center; margin-top: 15px; font-size: 14px; }
-        .text-center a { color: #ff512f; text-decoration: none; font-weight: bold; }
-        .error-msg { color: red; font-size: 12px; margin-bottom: 10px; }
+        :root {
+            --bg-dark: #09090b; --card-dark: #121214; --border-dark: #27272a;
+            --primary-orange: #ff512f; --gradient-orange: linear-gradient(135deg, #ff512f 0%, #f09819 100%);
+            --text-light: #ffffff; --text-muted: #a1a1aa;
+        }
         
-        /* Class tambahan untuk menyembunyikan elemen */
-        .hidden { display: none; }
+        body { margin: 0; padding: 0; background: var(--bg-dark); color: var(--text-light); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
+
+        .bg-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .shape1 { position: absolute; top: -20%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(255,81,47,0.15) 0%, transparent 60%); filter: blur(60px); }
+        .shape2 { position: absolute; bottom: -20%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(240,152,25,0.1) 0%, transparent 60%); filter: blur(60px); }
+
+        .auth-container { background: rgba(18, 18, 20, 0.6); backdrop-filter: blur(20px); border: 1px solid var(--border-dark); border-radius: 24px; padding: 40px; width: 100%; max-width: 450px; z-index: 10; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); }
         
-        /* Desain pemisah form */
-        .section-title { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-logo { font-size: 32px; font-weight: 800; color: var(--primary-orange); letter-spacing: -1px; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(255,81,47,0.3); }
+        .auth-subtitle { color: var(--text-muted); font-size: 15px; }
+
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group input, .form-group select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark); border-radius: 12px; color: var(--text-light); font-size: 15px; font-family: inherit; box-sizing: border-box; transition: all 0.3s ease; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary-orange); background: rgba(255,81,47,0.05); }
+        .form-group i { position: absolute; left: 18px; top: 43px; color: var(--text-muted); font-size: 16px; transition: 0.3s; }
+        .form-group input:focus + i, .form-group select:focus + i { color: var(--primary-orange); }
+
+        .form-group select option { background-color: var(--bg-dark); color: var(--text-light); font-size: 15px; padding: 10px; }
+
+        .btn-submit { width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--gradient-orange); color: white; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 20px rgba(255,81,47,0.3); margin-top: 10px; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(255,81,47,0.4); }
+        .btn-submit:active { transform: translateY(0); }
+
+        .auth-footer { text-align: center; margin-top: 25px; font-size: 14px; color: var(--text-muted); }
+        .auth-footer a { color: var(--primary-orange); text-decoration: none; font-weight: 700; transition: 0.3s; }
+        .auth-footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <div class="auth-card">
-        <h2>Create Account</h2>
+    <div class="bg-shapes">
+        <div class="shape1"></div>
+        <div class="shape2"></div>
+    </div>
 
-        @if ($errors->any())
-            <div class="error-msg">
-                <ul style="padding-left: 15px; margin: 0;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="auth-logo">Hiring</div>
+            <div class="auth-subtitle">Start your career journey today.</div>
+        </div>
 
-        <form action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('register') }}" method="POST">
             @csrf
             
             <div class="form-group">
-                <label>What Role?</label>
-                <select name="role" id="role-selector" required onchange="toggleForm()">
-                    <option value="" disabled selected>Pilih Peran Anda...</option>
-                    <option value="applicant">Applicant (Pencari Kerja)</option>
-                    <option value="employer">Employer (Perusahaan)</option>
+                <label>Full Name</label>
+                <input type="text" name="name" placeholder="John Doe" required autofocus>
+                <i class="fas fa-user"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="name@email.com" required>
+                <i class="fas fa-envelope"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Min. 8 characters" required>
+                <i class="fas fa-lock"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" name="password_confirmation" placeholder="Repeat your password" required>
+                <i class="fas fa-shield-alt"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Register As</label>
+                <select name="role" required style="padding-left: 45px; appearance: none;">
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="applicant">Applicant (Job Seeker)</option>
+                    <option value="employer">Employer (Company)</option>
                 </select>
+                <i class="fas fa-briefcase" style="top: 41px;"></i>
+                <i class="fas fa-chevron-down" style="position: absolute; left: auto; right: 18px; top: 43px; pointer-events: none;"></i>
             </div>
 
-            <div id="core-account-fields" class="hidden">
-                <div class="section-title">Informasi Login</div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" placeholder="contoh@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" placeholder="Minimal 8 karakter">
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" name="password_confirmation" placeholder="Ketik ulang password">
-                </div>
-            </div>
-
-            <div id="applicant-fields" class="hidden">
-                <div class="section-title">Profil Pelamar</div>
-                <div class="form-group">
-                    <label>Nama Lengkap (Sesuai KTP)</label>
-                    <input type="text" name="full_name" placeholder="Masukkan nama asli" class="applicant-input">
-                </div>
-                <div class="form-group">
-                    <label>Tanggal Lahir</label>
-                    <input type="date" name="date_of_birth" class="applicant-input">
-                </div>
-                <div class="form-group">
-                    <label>Kota Domisili</label>
-                    <input type="text" name="location_applicant" placeholder="Contoh: Surabaya" class="applicant-input">
-                </div>
-                <div class="form-group">
-                    <label>Pendidikan Terakhir</label>
-                    <select name="education" class="applicant-input">
-                        <option value="" disabled selected>Pilih Pendidikan...</option>
-                        <option value="SMA">SMA / SMK Sederajat</option>
-                        <option value="D3">Diploma (D3)</option>
-                        <option value="S1">Sarjana (S1)</option>
-                        <option value="S2">Magister (S2)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Upload KTP (PDF)</label>
-                    <input type="file" name="document_ktp" accept=".pdf" class="applicant-input">
-                </div>
-                <div class="form-group">
-                    <label>Upload Ijazah Terakhir (PDF)</label>
-                    <input type="file" name="document_ijazah" accept=".pdf" class="applicant-input">
-                </div>
-                <div class="form-group">
-                    <label>Upload CV (PDF)</label>
-                    <input type="file" name="document_cv" accept=".pdf" class="applicant-input">
-                </div>
-            </div>
-
-            <div id="employer-fields" class="hidden">
-                <div class="section-title">Profil Perusahaan</div>
-                <div class="form-group">
-                    <label>Nama Perusahaan</label>
-                    <input type="text" name="company_name" placeholder="Nama PT / Instansi" class="employer-input">
-                </div>
-                <div class="form-group">
-                    <label>Bidang Industri</label>
-                    <select name="company_type" class="employer-input">
-                        <option value="" disabled selected>Pilih Bidang...</option>
-                        <option value="Technology">Technology / IT</option>
-                        <option value="Finance">Finance & Banking</option>
-                        <option value="Healthcare">Healthcare</option>
-                        <option value="Creative">Creative & Media</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Lokasi Perusahaan</label>
-                    <input type="text" name="location_employer" placeholder="Kota operasional" class="employer-input">
-                </div>
-                <div class="form-group">
-                    <label>Upload NPWP Perusahaan (PDF)</label>
-                    <input type="file" name="document_npwp" accept=".pdf" class="employer-input">
-                </div>
-                <div class="form-group">
-                    <label>Upload Dokumen Legal/NIB (PDF)</label>
-                    <input type="file" name="document_nib" accept=".pdf" class="employer-input">
-                </div>
-            </div>
-
-            <button type="submit" id="submit-btn" class="btn-submit hidden">Sign Up</button>
+            <button type="submit" class="btn-submit">Create Account</button>
         </form>
 
-        <div class="text-center">
-            Already have an account? <a href="{{ route('login') }}">Login</a>
+        <div class="auth-footer">
+            Already have an account? <a href="{{ route('login') }}">Sign in here</a>
         </div>
     </div>
-
-    <script>
-    function toggleForm() {
-        const role = document.getElementById('role-selector').value;
-        
-        const coreFields = document.getElementById('core-account-fields');
-        const applicantDiv = document.getElementById('applicant-fields');
-        const employerDiv = document.getElementById('employer-fields');
-        const submitBtn = document.getElementById('submit-btn');
-
-        const coreInputs = coreFields.querySelectorAll('input');
-        const applicantInputs = document.querySelectorAll('.applicant-input');
-        const employerInputs = document.querySelectorAll('.employer-input');
-
-        // Munculkan form utama
-        if (role !== "") {
-            coreFields.classList.remove('hidden');
-            submitBtn.classList.remove('hidden');
-            coreInputs.forEach(input => input.disabled = false);
-        }
-
-        if (role === 'applicant') {
-            applicantDiv.classList.remove('hidden');
-            employerDiv.classList.add('hidden');
-            
-            // Aktifkan form pelamar
-            applicantInputs.forEach(input => {
-                input.disabled = false; 
-                input.required = true;
-            });
-            // MATIKAN form perusahaan (Browser akan mengabaikan ini)
-            employerInputs.forEach(input => {
-                input.disabled = true; 
-                input.required = false;
-            });
-            
-        } else if (role === 'employer') {
-            employerDiv.classList.remove('hidden');
-            applicantDiv.classList.add('hidden');
-            
-            // Aktifkan form perusahaan
-            employerInputs.forEach(input => {
-                input.disabled = false; 
-                input.required = true;
-            });
-            // MATIKAN form pelamar (Browser akan mengabaikan ini)
-            applicantInputs.forEach(input => {
-                input.disabled = true; 
-                input.required = false;
-            });
-        }
-    }
-</script>
 
 </body>
 </html>
