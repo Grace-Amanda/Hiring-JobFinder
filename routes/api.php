@@ -9,8 +9,9 @@ use App\Http\Controllers\Api\InterviewController;
 // Middleware 'auth:sanctum' memastikan hanya request yang membawa token yang diizinkan masuk
 Route::middleware('auth:sanctum')->group(function () {
     
-    // Endpoint API untuk mencari lowongan (Asinkronus)
+    // Endpoint API untuk mencari lowongan & kandidat
     Route::get('/jobs/search', [SearchController::class, 'searchJobs']);
+    Route::get('/applicants/search', [SearchController::class, 'searchApplicants']);
 
     // Endpoint API untuk merekam swipe card
     Route::post('/swipe', [SwipeController::class, 'recordSwipe']);
@@ -22,12 +23,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rute Kalender Interview
     Route::post('/interviews', [InterviewController::class, 'store']);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/jobs/search', [SearchController::class, 'searchJobs']);
-    Route::post('/swipe', [SwipeController::class, 'recordSwipe']);
-    
-    // Rute Baru: API Filter Kandidat untuk Employer
-    Route::get('/applicants/search', [SearchController::class, 'searchApplicants']);
 });

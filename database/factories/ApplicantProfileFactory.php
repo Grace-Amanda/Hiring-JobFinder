@@ -9,15 +9,15 @@ class ApplicantProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'status' => fake()->randomElement(['active', 'inactive']),
+            'status' => 'active_searching',
             'full_name' => fake()->name(),
-            'date_of_birth' => fake()->date('Y-m-d', '2005-01-01'),
-            'location' => fake()->city(), // Tambahan kolom location
-            'education' => fake()->randomElement(['SMA', 'D3', 'S1', 'S2']),
-            'rating' => fake()->randomFloat(2, 1, 5),
+            'date_of_birth' => fake()->date(),
+            'location_applicant' => fake()->city(), 
+            'education' => 'S1 Informatika',
+            'rating' => fake()->randomFloat(2, 3, 5),
             'job_history' => fake()->paragraph(),
             'document_ktp' => 'dummy_ktp_' . fake()->uuid() . '.pdf',
-            'document_ijazah' => 'dummy_ijazah_' . fake()->uuid() . '.pdf', // Tambahan ijazah
+            'document_ijazah' => 'dummy_ijazah_' . fake()->uuid() . '.pdf',
             'document_cv' => 'dummy_cv_' . fake()->uuid() . '.pdf',
         ];
     }

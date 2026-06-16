@@ -9,11 +9,11 @@ class EmployerProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'status' => fake()->randomElement(['active', 'inactive']),
+            'status' => 'active_searching', // Tetap ikuti kemauan database
             'company_name' => fake()->company(),
-            'location' => fake()->city(),
-            'company_type' => fake()->randomElement(['Technology', 'Finance', 'Healthcare', 'Creative']),
-            'rating' => fake()->randomFloat(2, 1, 5), 
+            'location_employer' => fake()->city(), 
+            'company_type' => 'Technology',
+            'rating' => fake()->randomFloat(2, 3, 5),
             'reviews' => fake()->paragraph(),
             'document_npwp' => 'dummy_npwp_' . fake()->uuid() . '.pdf',
             'document_nib' => 'dummy_nib_' . fake()->uuid() . '.pdf',

@@ -9,7 +9,7 @@ return new class extends Migration {
         Schema::create('employer_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', ['active_searching', 'unactive'])->default('active_searching');
             $table->string('company_name')->nullable();
             $table->string('location_employer')->nullable();
             $table->string('company_type')->nullable(); // Misal: IT, Finance, Manufacture

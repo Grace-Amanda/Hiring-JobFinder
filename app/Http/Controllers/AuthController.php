@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -71,7 +72,7 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // 1. Validasi input dari form register
+        // 1. Validasi input
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -79,43 +80,55 @@ class AuthController extends Controller
             'role' => 'required|in:applicant,employer',
         ]);
 
-        // 2. Buat akun User baru
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
+        try {
+            // Memulai Transaksi Database (Biar aman kalau ada error)
+            DB::beginTransaction();
 
-        // 3. Buat profil dasar secara otomatis berdasarkan Role yang dipilih
-        // Ini memastikan tabel profile tidak error saat user masuk ke dashboard
-        if ($request->role === 'applicant') {
-            ApplicantProfile::create([
-                'user_id' => $user->id,
-                'full_name' => $user->name,
-                'status' => 'active',
-                'rating' => 0.00
+            // 2. Buat akun User baru
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
             ]);
-        } else {
-            EmployerProfile::create([
-                'user_id' => $user->id,
-                'company_name' => $user->name,
-                'status' => 'active'
-            ]);
+
+            // 3. Buat profil dasar
+            if ($request->role === 'applicant') {
+                ApplicantProfile::create([
+                    'user_id' => $user->id,
+                    'full_name' => $user->name,
+                    'status' => 'active_searching',
+                    'rating' => 0.00
+                ]);
+            } else {
+                EmployerProfile::create([
+                    'user_id' => $user->id,
+                    'company_name' => $user->name,
+                    'status' => 'active_searching'
+                ]);
+            }
+
+            // Simpan permanen ke database
+            DB::commit();
+
+            // 4. Redirect ke login
+            return redirect('/login')->with('success', 'Account created successfully! Please sign in.');
+
+        } catch (\Exception $e) {
+            // Batalkan pembuatan User jika profil gagal dibuat
+            DB::rollBack();
+            
+            // TAMPILKAN ERROR ASLINYA DI LAYAR BIAR KITA TAHU PENYAKITNYA!
+            dd('GAGAL BIKIN PROFIL! ALASANNYA: ' . $e->getMessage());
         }
-
-        // 4. KUNCI UTAMA: Redirect ke halaman login dengan pesan sukses (Tanpa login otomatis)
-        return redirect('/login')->with('success', 'Account created successfully! Please sign in.');
     }
 
-    /**
-     * Memproses Logout
-     */
     public function logout(Request $request)
-        {
-        // Gunakan Nullsafe Operator (?->) bawaan PHP 8
-        // Ini memastikan fungsi delete() hanya dijalankan jika currentAccessToken() tidak kosong
-        $request->user()?->currentAccessToken()?->delete();
+    {
+        // Pengecekan aman: Hapus token API HANYA jika usernya ada DAN tokennya juga ada
+        if ($request->user() && $request->user()->currentAccessToken()) {
+            $request->user()->currentAccessToken()->delete();
+        }
 
         Auth::logout();
 

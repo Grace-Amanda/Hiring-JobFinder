@@ -14,27 +14,44 @@ class ProfileController extends Controller {
     public function update(Request $request) {
         $user = Auth::user();
 
-        // 1. LOGIKA UNTUK APPLICANT (CRUD Mahasiswa)
+        // 1. LOGIKA UNTUK APPLICANT (Pelamar)
         if ($user->role === 'applicant') {
             $request->validate([
                 'status' => 'required|in:active_searching,unactive',
                 'full_name' => 'nullable|string|max:255',
                 'date_of_birth' => 'nullable|date',
-                'location' => 'nullable|string|max:255',
+                'location_applicant' => 'nullable|string|max:255', // Diubah dari location
                 'education' => 'nullable|string',
                 'job_history' => 'nullable|string',
-                // Validasi file: maksimal 2MB, format pdf/jpg/png
+                // Validasi file: maksimal 2MB
                 'document_ktp' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
+                'document_ijazah' => 'nullable|mimes:pdf|max:2048', // Ditambahkan!
                 'document_cv' => 'nullable|mimes:pdf|max:2048',
             ]);
 
-            $profile = ApplicantProfile::where('user_id', $user->id)->first();
-            $data = $request->except(['document_ktp', 'document_cv']);
+            $profile = ApplicantProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'full_name' => $user->name,
+                'status' => 'active_searching',
+                'rating' => 0.00
+            ]
+        );
+
+
+            // Kecualikan semua input file agar tidak langsung masuk ke update()
+            $data = $request->except(['document_ktp', 'document_ijazah', 'document_cv']);
 
             // Proses unggah KTP
             if ($request->hasFile('document_ktp')) {
                 if ($profile->document_ktp) Storage::disk('public')->delete($profile->document_ktp);
                 $data['document_ktp'] = $request->file('document_ktp')->store('documents/applicant/ktp', 'public');
+            }
+
+            // Proses unggah Ijazah (Ini yang tadi bikin error path aneh)
+            if ($request->hasFile('document_ijazah')) {
+                if ($profile->document_ijazah) Storage::disk('public')->delete($profile->document_ijazah);
+                $data['document_ijazah'] = $request->file('document_ijazah')->store('documents/applicant/ijazah', 'public');
             }
 
             // Proses unggah CV
@@ -47,19 +64,26 @@ class ProfileController extends Controller {
             return redirect()->back()->with('success', 'Profil Applicant berhasil diperbarui!');
         }
 
-        // 2. LOGIKA UNTUK EMPLOYER
+        // 2. LOGIKA UNTUK EMPLOYER (Perusahaan)
         if ($user->role === 'employer') {
             $request->validate([
                 'status' => 'required|in:active_searching,unactive',
                 'company_name' => 'nullable|string|max:255',
-                'location' => 'nullable|string|max:255',
+                'location_employer' => 'nullable|string|max:255', // Diubah dari location
                 'company_type' => 'nullable|string|max:255',
                 'document_npwp' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
-                'document_legal' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
+                'document_nib' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048', // Diubah ke NIB
             ]);
 
-            $profile = EmployerProfile::where('user_id', $user->id)->first();
-            $data = $request->except(['document_npwp', 'document_legal']);
+            $profile = EmployerProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'company_name' => $user->name,
+                'status' => 'active_searching'
+            ]
+        );
+        
+            $data = $request->except(['document_npwp', 'document_nib']);
 
             // Proses unggah NPWP
             if ($request->hasFile('document_npwp')) {
@@ -67,10 +91,10 @@ class ProfileController extends Controller {
                 $data['document_npwp'] = $request->file('document_npwp')->store('documents/employer/npwp', 'public');
             }
 
-            // Proses unggah Dokumen Legal
-            if ($request->hasFile('document_legal')) {
-                if ($profile->document_legal) Storage::disk('public')->delete($profile->document_legal);
-                $data['document_legal'] = $request->file('document_legal')->store('documents/employer/legal', 'public');
+            // Proses unggah Dokumen NIB
+            if ($request->hasFile('document_nib')) {
+                if ($profile->document_nib) Storage::disk('public')->delete($profile->document_nib);
+                $data['document_nib'] = $request->file('document_nib')->store('documents/employer/nib', 'public');
             }
 
             $profile->update($data);

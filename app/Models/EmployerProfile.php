@@ -12,6 +12,7 @@ class EmployerProfile extends Model {
         'company_type', 'rating', 'reviews', 
         'document_npwp', 'document_nib'
     ];
+    
     public function user() { 
         return $this->belongsTo(User::class); 
         }

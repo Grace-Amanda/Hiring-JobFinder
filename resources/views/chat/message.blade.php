@@ -112,19 +112,22 @@
 
     @if(auth()->user()->role === 'applicant')
         <header class="top-nav">
-            <div class="logo">Hiring</div>
-            <div class="desktop-menu">
-                <a href="{{ url('/applicant/home') }}">Discover</a>
-                <a href="{{ route('messages.index') }}" class="active">Messages</a>
-                <a href="{{ url('/applicant/profile') }}">Profile</a>
-            </div>
+        <div class="logo">Hiring</div>
+        <div class="desktop-menu">
+            <a href="{{ url('/applicant/home') }}">Discover</a>
+            <a href="{{ route('messages.index') }}" class="active">Messages</a>
+            <a href="{{ url('/applicant/calendar') }}">Calendar</a>
+            <a href="{{ url('/applicant/profile') }}">Profile</a>
+        </div>
         </header>
     @else
+    
         <header class="top-nav">
             <div class="logo">Hiring <span style="font-size:14px; font-weight:normal; color:var(--text-muted);">Employer</span></div>
             <div class="desktop-menu">
                 <a href="{{ url('/employer/dashboard') }}">Dashboard</a>
                 <a href="{{ route('messages.index') }}" class="active">Messages</a>
+                <a href="{{ url('/employer/calendar') }}">Calendar</a>
                 <a href="{{ url('/employer/profile') }}">Profile</a>
             </div>
         </header>
