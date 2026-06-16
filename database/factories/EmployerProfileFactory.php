@@ -9,7 +9,7 @@ class EmployerProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'status' => 'active_searching', // Tetap ikuti kemauan database
+            'status' => 'active', // Tetap ikuti kemauan database
             'company_name' => fake()->company(),
             'location_employer' => fake()->city(), 
             'company_type' => 'Technology',

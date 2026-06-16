@@ -124,7 +124,7 @@
 
                 <div class="form-group">
                     <label>Universitas / Pendidikan Terakhir</label>
-                    <input type="text" name="education" value="{{ $profile->education ?? '' }}" placeholder="Contoh: Univ. Kristen Petra - Informatika">
+                    <input type="text" name="education" value="{{ $profile->education ?? '' }}" placeholder="Contoh: Univ. A - Informatika">
                 </div>
 
                 <div class="form-group">

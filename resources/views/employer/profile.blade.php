@@ -111,8 +111,8 @@
                 <div class="form-group">
                     <label>Status Pencarian Kandidat</label>
                     <select name="status">
-                        <option value="active_searching" {{ ($profile->status ?? '') == 'active_searching' ? 'selected' : '' }}>Aktif Membuka Lowongan</option>
-                        <option value="unactive" {{ ($profile->status ?? '') == 'unactive' ? 'selected' : '' }}>Tidak Aktif</option>
+                        <option value="active" {{ ($profile->status ?? '') == 'active' ? 'selected' : '' }}>Aktif Membuka Lowongan</option>
+                        <option value="inactive" {{ ($profile->status ?? '') == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
                     </select>
                 </div>
 
