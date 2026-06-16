@@ -51,7 +51,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', function () { 
             $profile = \App\Models\ApplicantProfile::firstOrCreate(
                 ['user_id' => Auth::id()],
-                ['full_name' => Auth::user()->name, 'status' => 'active_searching', 'rating' => 0.00]
+                ['full_name' => Auth::user()->name, 'status' => 'active', 'rating' => 0.00]
             );
             return view('applicant.profile', compact('profile')); 
         });
@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', function () { 
             $profile = \App\Models\EmployerProfile::firstOrCreate(
                 ['user_id' => Auth::id()],
-                ['company_name' => Auth::user()->name, 'status' => 'active_searching']
+                ['company_name' => Auth::user()->name, 'status' => 'active']
             );
             return view('employer.profile', compact('profile')); 
         });
