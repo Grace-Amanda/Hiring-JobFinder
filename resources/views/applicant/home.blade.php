@@ -99,7 +99,7 @@
         <div class="desktop-menu">
             <a href="{{ url('/applicant/home') }}" class="active">Discover</a>
             <a href="{{ route('messages.index') }}">Messages</a>
-            <a href="{{ url('/applicant/calendar') }}">Calendar</a>
+            <a href="{{ route('calendar.index') }}"><i class="fas fa-calendar-alt"></i></a>
             <a href="{{ url('/applicant/profile') }}">Profile</a>
         </div>
     </header>
@@ -136,6 +136,7 @@
     <nav class="bottom-nav">
         <a href="{{ url('/applicant/home') }}" class="active"><i class="fas fa-layer-group"></i></a>
         <a href="{{ route('messages.index') }}"><i class="fas fa-comment-dots"></i></a>
+        <a href="{{ route('calendar.index') }}" class="nav-item"><i class="fas fa-calendar-alt"></i></a>
         <a href="{{ url('/applicant/profile') }}"><i class="fas fa-user"></i></a>
     </nav>
 
