@@ -24,3 +24,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute Kalender Interview
     Route::post('/interviews', [InterviewController::class, 'store']);
 });
+    // Untuk Swipe
+    Route::middleware('auth:sanctum')->post('/swipe', [SwipeController::class, 'recordSwipe']);

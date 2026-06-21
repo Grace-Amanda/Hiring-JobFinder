@@ -55,6 +55,11 @@ Route::middleware('auth')->group(function () {
             );
             return view('applicant.profile', compact('profile')); 
         });
+
+        // Kalender di sisi applicant
+        Route::get('/calendar', function () {
+            return view('applicant.calendar');
+        });
     });
 
     // --- AREA EMPLOYER ---
@@ -69,6 +74,11 @@ Route::middleware('auth')->group(function () {
             );
             return view('employer.profile', compact('profile')); 
         });
+
+        // Kalender di sisi Employer
+        Route::get('/calendar', function () {
+            return view('employer.calendar');
+        });
         
         // PERBAIKAN: CRUD Lowongan dimasukkan kembali ke dalam area Employer
         Route::post('/jobs', [JobVacancyController::class, 'store'])->name('jobs.store');
@@ -76,3 +86,5 @@ Route::middleware('auth')->group(function () {
         Route::delete('/jobs/{id}', [JobVacancyController::class, 'destroy'])->name('jobs.destroy');
     });
 });
+
+

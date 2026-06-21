@@ -102,6 +102,7 @@
         <div class="logo">Hiring <span>Employer</span></div>
         <div class="desktop-menu">
             <a href="{{ url('/employer/dashboard') }}" class="active">Candidates</a>
+            <a href="{{ url('/employer/calendar') }}">Calendar</a>
             <a href="{{ route('messages.index') }}">Messages</a>
             <a href="{{ url('/employer/profile') }}">Profile</a>
         </div>
@@ -225,7 +226,7 @@
             fetch(`/api/swipe`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') },
-                body: JSON.stringify({ employer_id: applicantId, job_vacancy_id: jobId, action: action })
+                body: JSON.stringify({ applicant_id: applicantId, job_vacancy_id: jobId, action: action })
             });
             
             setTimeout(() => { renderTopCard(); }, 350);
