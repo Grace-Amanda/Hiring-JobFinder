@@ -10,51 +10,45 @@ use App\Models\EmployerProfile;
 
 class ProfileController extends Controller {
     
-    // Fungsi untuk memperbarui profil dan mengunggah dokumen
     public function update(Request $request) {
         $user = Auth::user();
 
         // 1. LOGIKA UNTUK APPLICANT (Pelamar)
         if ($user->role === 'applicant') {
+
             $request->validate([
                 'status' => 'required|in:active_searching,unactive',
                 'full_name' => 'nullable|string|max:255',
                 'date_of_birth' => 'nullable|date',
-                'location_applicant' => 'nullable|string|max:255', // Diubah dari location
+                'location_applicant' => 'nullable|string|max:255', 
                 'education' => 'nullable|string',
                 'job_history' => 'nullable|string',
-                // Validasi file: maksimal 2MB
                 'document_ktp' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
-                'document_ijazah' => 'nullable|mimes:pdf|max:2048', // Ditambahkan!
+                'document_ijazah' => 'nullable|mimes:pdf|max:2048', 
                 'document_cv' => 'nullable|mimes:pdf|max:2048',
             ]);
 
             $profile = ApplicantProfile::firstOrCreate(
-            ['user_id' => $user->id],
-            [
-                'full_name' => $user->name,
-                'status' => 'active_searching',
-                'rating' => 0.00
-            ]
-        );
+                ['user_id' => $user->id],
+                [
+                    'full_name' => $user->name,
+                    'status' => 'active_searching',
+                    'rating' => 0.00
+                ]
+            );
 
-
-            // Kecualikan semua input file agar tidak langsung masuk ke update()
             $data = $request->except(['document_ktp', 'document_ijazah', 'document_cv']);
 
-            // Proses unggah KTP
             if ($request->hasFile('document_ktp')) {
                 if ($profile->document_ktp) Storage::disk('public')->delete($profile->document_ktp);
                 $data['document_ktp'] = $request->file('document_ktp')->store('documents/applicant/ktp', 'public');
             }
 
-            // Proses unggah Ijazah (Ini yang tadi bikin error path aneh)
             if ($request->hasFile('document_ijazah')) {
                 if ($profile->document_ijazah) Storage::disk('public')->delete($profile->document_ijazah);
                 $data['document_ijazah'] = $request->file('document_ijazah')->store('documents/applicant/ijazah', 'public');
             }
 
-            // Proses unggah CV
             if ($request->hasFile('document_cv')) {
                 if ($profile->document_cv) Storage::disk('public')->delete($profile->document_cv);
                 $data['document_cv'] = $request->file('document_cv')->store('documents/applicant/cv', 'public');
@@ -63,8 +57,6 @@ class ProfileController extends Controller {
             $profile->update($data);
             return redirect()->back()->with('success', 'Profil Applicant berhasil diperbarui!');
         }
-
-        // 2. LOGIKA UNTUK EMPLOYER (Perusahaan)
         if ($user->role === 'employer') {
             $request->validate([
                 'status' => 'required|in:active_searching,unactive',
