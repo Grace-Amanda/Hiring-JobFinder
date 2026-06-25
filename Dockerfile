@@ -1,7 +1,15 @@
 FROM php:8.2-fpm
 
+# Install dependensi sistem Linux (wajib untuk Composer install)
+RUN apt-get update && apt-get install -y \
+    zip \
+    unzip \
+    git \
+    curl \
+    libzip-dev
+
 # Install ekstensi PHP yang dibutuhkan Laravel
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
