@@ -22,7 +22,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages', [ChatController::class, 'sendMessage']);
 
     // Rute Kalender Interview
+    Route::get('/interviews', [InterviewController::class, 'index']);
+    Route::get('/interviews/matched-candidates', [InterviewController::class, 'getMatchedCandidates']);
+
     Route::post('/interviews', [InterviewController::class, 'store']);
 });
     // Untuk Swipe
     Route::middleware('auth:sanctum')->post('/swipe', [SwipeController::class, 'recordSwipe']);
+    Route::post('/interviews/{id}/confirm', [InterviewController::class, 'confirm']);
+    Route::post('/interviews/{id}/cancel', [InterviewController::class, 'cancel']);
+    Route::post('/interviews/{id}/complete', [InterviewController::class, 'complete']);
+});
+

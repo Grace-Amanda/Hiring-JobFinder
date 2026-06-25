@@ -84,6 +84,7 @@ class SwipeController extends Controller
             }
         }
 
+
         return response()->json([
             'status' => 'success',
             'message' => 'Swipe recorded successfully!',
