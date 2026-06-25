@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/interviews/matched-candidates', [InterviewController::class, 'getMatchedCandidates']);
 
     Route::post('/interviews', [InterviewController::class, 'store']);
-});
+
     // Untuk Swipe
     Route::middleware('auth:sanctum')->post('/swipe', [SwipeController::class, 'recordSwipe']);
     Route::post('/interviews/{id}/confirm', [InterviewController::class, 'confirm']);
