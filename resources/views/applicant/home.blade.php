@@ -354,7 +354,10 @@
             initDrag(document.getElementById('topCard'), job.employer_id, job.id);
         }
 
-        function triggerAction(action, employerId, jobId) {
+        // ─── FIX BUG #5: triggerAction sekarang async, await fetch, handle match response ───
+        // Sebelumnya: fetch tidak di-await, response tidak dibaca, tidak ada notifikasi match.
+        // Sekarang: tunggu response, jika match_status === 'matched' tampilkan popup & redirect ke Messages.
+        async function triggerAction(action, employerId, jobId) {
             const card = document.getElementById('topCard');
             if(!card) return;
             
@@ -365,12 +368,28 @@
             revealContent.style.opacity = 1;
 
             currentJobs.shift(); 
-            
-            fetch(`/api/swipe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') },
-                body: JSON.stringify({ employer_id: employerId, job_vacancy_id: jobId, action: action })
-            });
+
+            try {
+                // FIX: await fetch agar bisa baca response-nya
+                const res = await fetch(`/api/swipe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') },
+                    body: JSON.stringify({ employer_id: employerId, job_vacancy_id: jobId, action: action })
+                });
+                const data = await res.json();
+
+                // FIX: Jika match terjadi, tampilkan notifikasi lalu redirect ke Messages
+                if (data.match_status === 'matched') {
+                    setTimeout(() => {
+                        const goMsg = confirm('🎉 IT\'S A MATCH! Perusahaan ini juga tertarik dengan profil Anda!\nMau langsung buka Messages sekarang?');
+                        if (goMsg) window.location.href = '{{ route("messages.index") }}';
+                        else renderTopCard();
+                    }, 400);
+                    return; // Jangan lanjut renderTopCard dulu, tunggu konfirmasi user
+                }
+            } catch(e) {
+                console.error('Swipe API error:', e);
+            }
             
             setTimeout(() => { renderTopCard(); }, 350);
         }

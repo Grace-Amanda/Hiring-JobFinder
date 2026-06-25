@@ -33,10 +33,9 @@ Route::middleware('auth')->group(function () {
     
     // Fitur Global (Bisa dipakai semua role)
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     
-    // PERBAIKAN: Mengubah method dari post menjadi put agar sesuai dengan form
-    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    
+    // PERBAIKAN: Mengarah ke view 'chat.message' sesuai nama file di folder-mu
     Route::get('/messages', function () { return view('chat.message'); })->name('messages.index');
 
     // --- AREA ADMIN ---
@@ -76,11 +75,16 @@ Route::middleware('auth')->group(function () {
             return view('employer.profile', compact('profile')); 
         });
 
-        // Kalender di sisi Employer
+        // Kalender di sisi Employer (PERBAIKAN: Mengambil data kandidat Matched)
         Route::get('/calendar', function () {
-            return view('employer.calendar');
+            $matches = \App\Models\Swipe::with(['applicant.applicantProfile'])
+                ->where('employer_id', Auth::id())
+                ->where('status', 'matched')
+                ->get();
+            return view('employer.calendar', compact('matches'));
         });
         
+        // PERBAIKAN: CRUD Lowongan dimasukkan kembali ke dalam area Employer
         Route::post('/jobs', [JobVacancyController::class, 'store'])->name('jobs.store');
         Route::put('/jobs/{id}', [JobVacancyController::class, 'update'])->name('jobs.update');
         Route::delete('/jobs/{id}', [JobVacancyController::class, 'destroy'])->name('jobs.destroy');

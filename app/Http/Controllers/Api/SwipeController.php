@@ -39,19 +39,22 @@ class SwipeController extends Controller
                       ->first();
 
         $match_status = 'pending';
+        $swipe_id     = null;  // FIX BUG #2: tambah variabel swipe_id untuk dikembalikan ke frontend
 
         // --- SKENARIO A: JIKA REJECT ---
         if ($action === 'reject') {
             $match_status = 'rejected';
             if ($swipe) {
                 $swipe->update(['status' => 'rejected']);
+                $swipe_id = $swipe->id;
             } else {
-                Swipe::create([
-                    'applicant_id' => $applicantId,
-                    'employer_id'  => $employerId,
+                $newSwipe = Swipe::create([
+                    'applicant_id'   => $applicantId,
+                    'employer_id'    => $employerId,
                     'job_vacancy_id' => $job_vacancy_id,
-                    'status' => 'rejected'
+                    'status'         => 'rejected'
                 ]);
+                $swipe_id = $newSwipe->id;
             }
         } 
         // --- SKENARIO B: JIKA LIKE ---
@@ -61,34 +64,37 @@ class SwipeController extends Controller
                 if ($swipe->status === 'pending') {
                     $swipe->update(['status' => 'matched']);
                     $match_status = 'matched';
+                    $swipe_id     = $swipe->id;
 
                     // BONUS: Otomatis buat pesan pembuka saat Match!
                     Message::create([
-                        'swipe_id' => $swipe->id,
+                        'swipe_id'  => $swipe->id,
                         'sender_id' => $employerId, // Seolah-olah perusahaan yang menyapa
-                        'message' => 'Selamat! Profil Anda cocok dengan kriteria lowongan kami. Mari diskusikan jadwal wawancara.'
+                        'message'   => 'Selamat! Profil Anda cocok dengan kriteria lowongan kami. Mari diskusikan jadwal wawancara.'
                     ]);
                 } else {
                     // Jika sebelumnya rejected, biarkan tetap rejected (tidak bisa maksa match)
                     $match_status = $swipe->status;
+                    $swipe_id     = $swipe->id;
                 }
             } else {
                 // Jika belum ada record sama sekali, buat baru dengan status pending
-                Swipe::create([
-                    'applicant_id' => $applicantId,
-                    'employer_id'  => $employerId,
+                $newSwipe = Swipe::create([
+                    'applicant_id'   => $applicantId,
+                    'employer_id'    => $employerId,
                     'job_vacancy_id' => $job_vacancy_id,
-                    'status' => 'pending'
+                    'status'         => 'pending'
                 ]);
                 $match_status = 'pending';
+                $swipe_id     = $newSwipe->id;
             }
         }
 
-
         return response()->json([
-            'status' => 'success',
-            'message' => 'Swipe recorded successfully!',
-            'match_status' => $match_status
+            'status'       => 'success',
+            'message'      => 'Swipe recorded successfully!',
+            'match_status' => $match_status,
+            'swipe_id'     => $swipe_id   // FIX BUG #2: kirim swipe_id ke frontend agar bisa redirect ke messages
         ], 200);
     }
 }

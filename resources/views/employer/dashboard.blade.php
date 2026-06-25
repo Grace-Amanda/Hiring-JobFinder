@@ -286,11 +286,22 @@
             } catch (e) { console.error("API Error:", e); }
         };
 
+        // ─── FIX BUG #3 & #4: renderCard sekarang menyertakan job_vacancy_id dari kartu ───
+        // Sebelumnya hanya kirim user_id saja, sehingga job_vacancy_id selalu pakai dummyJobId=1 (hardcoded).
+        // Sekarang setiap kartu membawa job_vacancy_id dinamis dari data kandidat.
+        // Namun karena SearchController mengembalikan ApplicantProfile (bukan JobVacancy),
+        // kita ambil job_vacancy_id dari swipe yang matched antara kandidat & employer ini.
+        // Solusi sederhana & tidak merusak: gunakan job.id dari data swipe yang dikembalikan API,
+        // atau fallback ke dummyJobId jika belum ada. Data kandidat sudah punya field user_id.
+        // Untuk memastikan match bisa terjadi, kita tetap kirim applicant_id + job_vacancy_id
+        // yang sudah ada di data kandidat (field job_vacancy_id ditambah di SearchController — lihat fix SearchController).
         const renderCard = () => {
             $dw.innerHTML = ''; $rc.style.opacity = 0;
             if (!cands.length) return $dw.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin-top:50%;font-family:inherit"><span style="font-size:60px;display:block;margin-bottom:10px">📭</span><h2 style="font-size:28px;font-weight:800;color:var(--text-light);margin:0 0 10px">Kosong!</h2><p style="font-size:15px">Tidak ada kandidat sesuai kriteria Anda.</p></div>`;
             
             let a = cands[0];
+            // FIX: Ambil job_vacancy_id dari data kandidat jika tersedia, fallback ke dummyJobId
+            let jobId = a.job_vacancy_id || dummyJobId;
             $dw.innerHTML = `
                 <div class="card" id="topCard">
                     <div class="card-visual"><div class="rating-badge">★ ${a.rating}</div></div>
@@ -300,29 +311,51 @@
                         <div class="job-reqs">${a.job_history || 'No experience detailed.'}</div>
                     </div>
                     <div class="card-actions">
-                        <button class="btn-action btn-reject" onclick="act('reject',${a.user_id})"><i class="fas fa-times"></i></button>
-                        <button class="btn-action btn-accept" onclick="act('like',${a.user_id})"><i class="fas fa-check"></i></button>
+                        <button class="btn-action btn-reject" onclick="act('reject',${a.user_id},${jobId})"><i class="fas fa-times"></i></button>
+                        <button class="btn-action btn-accept" onclick="act('like',${a.user_id},${jobId})"><i class="fas fa-check"></i></button>
                     </div>
                 </div>
             `;
-            initDrag(document.getElementById('topCard'), a.user_id);
+            initDrag(document.getElementById('topCard'), a.user_id, jobId);
         };
 
-        const act = (action, uId) => {
+        // ─── FIX BUG #3: act() sekarang async, handle response, tampilkan popup match ───
+        // Sebelumnya: fetch tidak di-await, response tidak dibaca, tidak ada notifikasi match.
+        // Sekarang: tunggu response, jika match_status === 'matched' tampilkan popup & arahkan ke Messages.
+        const act = async (action, uId, jobId) => {
             let $c = document.getElementById('topCard'); if(!$c) return;
             $c.classList.add(action === 'like' ? 'swipe-out-right' : 'swipe-out-left');
             $rc.innerHTML = action === 'like' ? '<span>💚</span> HIRE' : '<span>❌</span> REJECT';
             $rc.style.color = action === 'like' ? '#4ade80' : '#f87171'; $rc.style.opacity = 1;
             cands.shift();
-            fetch(`/api/swipe`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') }, 
-                body: JSON.stringify({ applicant_id: uId, job_vacancy_id: dummyJobId, action }) 
-            });
+
+            try {
+                // FIX: await fetch agar bisa baca response-nya
+                const res = await fetch(`/api/swipe`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') }, 
+                    body: JSON.stringify({ applicant_id: uId, job_vacancy_id: jobId, action }) 
+                });
+                const data = await res.json();
+
+                // FIX: Jika match terjadi, tampilkan notifikasi lalu redirect ke Messages
+                if (data.match_status === 'matched') {
+                    setTimeout(() => {
+                        const goMsg = confirm('🎉 IT\'S A MATCH! Kandidat ini tertarik dengan lowongan Anda.\nMau langsung buka Messages sekarang?');
+                        if (goMsg) window.location.href = '{{ route("messages.index") }}';
+                        else renderCard();
+                    }, 400);
+                    return; // Jangan lanjut renderCard dulu, tunggu konfirmasi user
+                }
+            } catch(e) {
+                console.error('Swipe API error:', e);
+            }
+
             setTimeout(renderCard, 350);
         };
 
-        const initDrag = ($c, uId) => {
+        // ─── FIX BUG #4: initDrag sekarang menerima & meneruskan jobId ───
+        const initDrag = ($c, uId, jobId) => {
             let drag = false, start = 0, cur = 0, th = 120;
             const evX = e => e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
             
@@ -339,7 +372,8 @@
             const endDrag = () => {
                 if(!drag) return; drag = false; let diff = cur - start;
                 $c.style.transition = 'transform .4s cubic-bezier(.175,.885,.32,1.275), opacity .4s';
-                if(Math.abs(diff) > th) act(diff > 0 ? 'like' : 'reject', uId);
+                // FIX: teruskan jobId ke act()
+                if(Math.abs(diff) > th) act(diff > 0 ? 'like' : 'reject', uId, jobId);
                 else { $c.style.transform = 'none'; $rc.style.opacity = 0; }
             };
 
