@@ -27,16 +27,11 @@
         .desktop-menu a { color: var(--text-muted); text-decoration: none; font-size: 16px; font-weight: 500; transition: color 0.3s; }
         .desktop-menu a.active, .desktop-menu a:hover { color: var(--text-light); }
 
-        .search-section { padding: 0 5% 30px; z-index: 10; position: relative; display: flex; justify-content: center; gap: 10px; max-width: 550px; margin: 0 auto; }
-        
-        .search-box { position: relative; flex: 1; }
-        .search-box input { width: 100%; background: rgba(28, 28, 36, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-dark); border-radius: 16px; color: var(--text-light); padding: 14px 40px 14px 20px; font-size: 15px; outline: none; font-family: inherit; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.3); box-sizing: border-box;}
+        .search-section { padding: 0 5% 30px; text-align: center; z-index: 10; position: relative; }
+        .search-box { position: relative; max-width: 500px; margin: 0 auto; }
+        .search-box input { width: 100%; background: rgba(28, 28, 36, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-dark); border-radius: 20px; color: var(--text-light); padding: 15px 40px 15px 20px; font-size: 16px; outline: none; font-family: inherit; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
         .search-box input:focus { border-color: var(--primary-orange); box-shadow: 0 10px 20px rgba(255,81,47,0.2);}
-        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; }
-        
-        .btn-filter { background: rgba(28, 28, 36, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-dark); color: var(--text-light); width: 50px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
-        .btn-filter:hover, .btn-filter.active { border-color: var(--primary-orange); color: var(--primary-orange); background: rgba(255,81,47,0.1); }
-        .filter-indicator { position: absolute; top: -5px; right: -5px; background: var(--primary-orange); width: 12px; height: 12px; border-radius: 50%; display: none; border: 2px solid var(--bg-dark); }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px; }
 
         .swipe-instruction { display: flex; align-items: center; justify-content: center; gap: 15px; width: 100%; z-index: 10; position: relative; margin-bottom: 35px; }
         .instruction-badge { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
@@ -45,7 +40,8 @@
         .drag-icon { font-size: 20px; color: var(--text-light); animation: slide-hint 2s infinite; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px;}
         @keyframes slide-hint { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } 100% { transform: translateX(0); } }
 
-        .main-stage { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; position: relative; overflow: hidden; padding-bottom: 80px; z-index: 5; }
+        /* PERBAIKAN: Diubah ke 'center' agar kartu presisi di tengah-tengah panggung */
+        .main-stage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; padding-bottom: 80px; z-index: 5; }
         .card-stack { position: relative; width: 90%; max-width: 420px; height: 60vh; max-height: 550px; display: flex; justify-content: center; align-items: center;}
 
         .reveal-layer { position: absolute; width: 100%; height: 100%; border-radius: 30px; border: 3px dashed var(--border-dark); background: rgba(28,28,36,0.5); display: flex; justify-content: center; align-items: center; z-index: 1; }
@@ -86,31 +82,6 @@
         .profile-alert a { background: var(--primary-orange); color: white; padding: 6px 15px; border-radius: 20px; text-decoration: none; font-weight: 700; font-size: 12px; transition: 0.3s; white-space: nowrap; margin-left: 15px;}
         .profile-alert a:hover { background: #e04425; }
         @media (max-width: 768px) { .profile-alert { flex-direction: column; text-align: center; gap: 10px; padding: 15px 5%;} }
-
-        /* --- STYLING MODAL FILTER --- */
-        .filter-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100; display: none; justify-content: center; align-items: flex-end; }
-        .filter-modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
-        .filter-modal { background: var(--bg-dark); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 30px; border-top: 1px solid var(--border-dark); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1); box-sizing: border-box;}
-        .filter-modal-overlay.active .filter-modal { transform: translateY(0); }
-        
-        .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .filter-header h3 { margin: 0; font-size: 20px; font-weight: 800; }
-        .btn-close-filter { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
-        
-        .filter-group { margin-bottom: 20px; }
-        .filter-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;}
-        .filter-group select { width: 100%; background: var(--card-dark); border: 1px solid var(--border-dark); color: var(--text-light); padding: 15px; border-radius: 12px; outline: none; font-family: inherit; font-size: 15px;}
-        
-        .filter-actions { display: flex; gap: 10px; margin-top: 30px; }
-        .btn-reset { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--border-dark); color: var(--text-light); border-radius: 12px; font-weight: 700; cursor: pointer;}
-        .btn-apply { flex: 2; padding: 15px; background: var(--gradient-orange); border: none; color: white; border-radius: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px rgba(255,81,47,0.3);}
-        
-        @media (min-width: 768px) {
-            .filter-modal-overlay { align-items: center; }
-            .filter-modal { border-radius: 24px; border: 1px solid var(--border-dark); transform: scale(0.9); opacity: 0;}
-            .filter-modal-overlay.active .filter-modal { transform: scale(1); opacity: 1;}
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -131,33 +102,20 @@
         </div>
     </header>
 
-    <!-- CEK KONDISI PROFIL DARI DATABASE -->
-    @php
-        $profile = \App\Models\ApplicantProfile::where('user_id', Auth::id())->first();
-        $isProfileComplete = $profile && $profile->document_ktp && $profile->document_cv;
-    @endphp
-
-    <!-- TAMPILKAN ALERT HANYA JIKA PROFIL BELUM LENGKAP -->
-    @if(!$isProfileComplete)
     <div class="profile-alert" id="profileAlert" style="display: none;">
-        <div><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> <strong>Profil Belum Lengkap!</strong> Unggah CV dan KTP agar lamaran Anda bisa diproses.</div>
+        <div><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> <strong>Profil Belum Lengkap!</strong> Unggah CV dan KTP agar lamaran Anda bisa diproses oleh HRD.</div>
         <a href="{{ url('/applicant/profile') }}">Lengkapi Sekarang</a>
     </div>
-    @endif
 
     <div class="search-section" style="margin-top: 20px;">
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Cari posisi atau perusahaan...">
             <i class="fas fa-search"></i>
         </div>
-        <!-- TOMBOL FILTER -->
-        <button class="btn-filter" id="btnOpenFilter" title="Filter Pencarian">
-            <i class="fas fa-sliders-h"></i>
-            <div class="filter-indicator" id="filterIndicator"></div>
-        </button>
     </div>
 
     <main class="main-stage">
+        
         <div class="swipe-instruction">
             <div class="instruction-badge left"><i class="fas fa-times"></i> Reject</div>
             <div class="drag-icon"><i class="fas fa-arrows-alt-h"></i> Geser Kartu</div>
@@ -168,63 +126,13 @@
             <div class="reveal-layer">
                 <div class="reveal-content" id="revealContent"></div>
             </div>
+            
             <div id="dynamicCardWrapper" style="width:100%; height:100%; position:absolute; top:0; left:0; z-index:2;"></div>
         </div>
     </main>
 
-    <!-- MODAL FILTER -->
-    <div class="filter-modal-overlay" id="filterModal">
-        <div class="filter-modal">
-            <div class="filter-header">
-                <h3>Filter Pencarian</h3>
-                <button class="btn-close-filter" id="btnCloseFilter"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <div class="filter-group">
-                <label>Lokasi / Kota</label>
-                <select id="filterLocation">
-                    <option value="">Semua Lokasi</option>
-                    <option value="Jakarta">Jakarta</option>
-                    <option value="Surabaya">Surabaya</option>
-                    <option value="Bandung">Bandung</option>
-                    <option value="Yogyakarta">Yogyakarta</option>
-                    <option value="Remote">Remote / WFA</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label>Bidang / Industri</label>
-                <select id="filterIndustry">
-                    <option value="">Semua Bidang</option>
-                    <option value="Teknologi">Teknologi & IT</option>
-                    <option value="Kesehatan">Kesehatan</option>
-                    <option value="Pendidikan">Pendidikan</option>
-                    <option value="Keuangan">Keuangan & Perbankan</option>
-                    <option value="Manufaktur">Manufaktur</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label>Tipe Pekerjaan</label>
-                <select id="filterJobType">
-                    <option value="">Semua Tipe</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Kontrak</option>
-                    <option value="Internship">Magang</option>
-                </select>
-            </div>
-
-            <div class="filter-actions">
-                <button class="btn-reset" id="btnResetFilter">Reset</button>
-                <button class="btn-apply" id="btnApplyFilter">Terapkan Filter</button>
-            </div>
-        </div>
-    </div>
-
     <nav class="bottom-nav">
         <a href="{{ url('/applicant/home') }}" class="active"><i class="fas fa-layer-group"></i></a>
-        <a href="{{ url('/applicant/calendar') }}"><i class="fas fa-calendar-alt"></i></a>
         <a href="{{ route('messages.index') }}"><i class="fas fa-comment-dots"></i></a>
         <a href="{{ url('/applicant/profile') }}"><i class="fas fa-user"></i></a>
     </nav>
@@ -232,84 +140,22 @@
     <script>
         @if(session('api_token')) localStorage.setItem('api_token', '{{ session('api_token') }}'); @endif
         
-        // JALANKAN JAVASCRIPT ANIMASI POP-UP HANYA JIKA PROFIL BELUM LENGKAP
-        @if(!$isProfileComplete)
-        setTimeout(() => { 
-            let alertBox = document.getElementById('profileAlert');
-            if(alertBox) alertBox.style.display = 'flex'; 
-        }, 1500);
-        @endif
+        setTimeout(() => { document.getElementById('profileAlert').style.display = 'flex'; }, 1500);
 
         let currentJobs = [];
         const dynamicCardWrapper = document.getElementById('dynamicCardWrapper');
         const searchInput = document.getElementById('searchInput');
         const revealContent = document.getElementById('revealContent');
 
-        // Filter Elements
-        const filterModal = document.getElementById('filterModal');
-        const btnOpenFilter = document.getElementById('btnOpenFilter');
-        const btnCloseFilter = document.getElementById('btnCloseFilter');
-        const btnApplyFilter = document.getElementById('btnApplyFilter');
-        const btnResetFilter = document.getElementById('btnResetFilter');
-        const filterIndicator = document.getElementById('filterIndicator');
+        fetchJobs();
+        searchInput.addEventListener('keyup', fetchJobs);
 
-        // Buka/Tutup Modal Filter
-        btnOpenFilter.addEventListener('click', () => filterModal.classList.add('active'));
-        btnCloseFilter.addEventListener('click', () => filterModal.classList.remove('active'));
-        
-        // Menutup modal jika klik di luar area modal
-        filterModal.addEventListener('click', (e) => {
-            if(e.target === filterModal) filterModal.classList.remove('active');
-        });
-
-        // Trigger Pencarian
-        searchInput.addEventListener('keyup', (e) => {
-            if(e.key === 'Enter') fetchJobs(); 
-        });
-
-        // Terapkan Filter
-        btnApplyFilter.addEventListener('click', () => {
-            filterModal.classList.remove('active');
-            fetchJobs();
-        });
-
-        // Reset Filter
-        btnResetFilter.addEventListener('click', () => {
-            document.getElementById('filterLocation').value = '';
-            document.getElementById('filterIndustry').value = '';
-            document.getElementById('filterJobType').value = '';
-            searchInput.value = '';
-            fetchJobs();
-        });
-
-        // Fungsi Ambil Data dengan Filter
         async function fetchJobs() {
             let keyword = searchInput.value;
-            let location = document.getElementById('filterLocation').value;
-            let industry = document.getElementById('filterIndustry').value;
-            let jobType = document.getElementById('filterJobType').value;
-
-            // Indikator Titik Orange jika ada filter yang aktif
-            if(location || industry || jobType) {
-                filterIndicator.style.display = 'block';
-                btnOpenFilter.classList.add('active');
-            } else {
-                filterIndicator.style.display = 'none';
-                btnOpenFilter.classList.remove('active');
-            }
-
-            // Membangun URL Query String
-            let queryParams = new URLSearchParams();
-            if (keyword) queryParams.append('keyword', keyword);
-            if (location) queryParams.append('location', location);
-            if (industry) queryParams.append('industry', industry);
-            if (jobType) queryParams.append('job_type', jobType);
-
             try {
-                let response = await fetch(`/api/jobs/search?${queryParams.toString()}`, {
+                let response = await fetch(`/api/jobs/search?keyword=${keyword}`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('api_token') }
                 });
-                
                 if (response.ok) {
                     let result = await response.json();
                     currentJobs = result.data;
@@ -327,7 +173,7 @@
                     <div style="text-align:center; color:var(--text-muted); margin-top:50%; font-family: inherit;">
                         <span style="font-size:60px; display:block; margin-bottom:10px;">📭</span>
                         <h2 style="font-size:28px; font-weight:800; color:var(--text-light); margin:0 0 10px 0;">Kosong!</h2>
-                        <p style="font-size:15px;">Belum ada lowongan sesuai kriteria Anda.</p>
+                        <p style="font-size:15px;">Belum ada lowongan baru.</p>
                     </div>`;
                 return;
             }
@@ -335,9 +181,14 @@
             let job = currentJobs[0];
             let companyName = job.employer.employer_profile ? job.employer.employer_profile.company_name : job.employer.name;
 
+            // TAMBAHAN LOGIKA FOTO PERUSAHAAN
+            let employerPhoto = (job.employer.employer_profile && job.employer.employer_profile.profile_photo) 
+                ? `/storage/${job.employer.employer_profile.profile_photo}` 
+                : 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop';
+
             let cardHTML = `
                 <div class="card" id="topCard">
-                    <div class="card-visual"></div>
+                    <div class="card-visual" style="background-image: url('${employerPhoto}')"></div>
                     <div class="card-content">
                         <div class="company-label">${companyName}</div>
                         <h2 class="job-title">${job.title}</h2>
@@ -354,10 +205,7 @@
             initDrag(document.getElementById('topCard'), job.employer_id, job.id);
         }
 
-        // ─── FIX BUG #5: triggerAction sekarang async, await fetch, handle match response ───
-        // Sebelumnya: fetch tidak di-await, response tidak dibaca, tidak ada notifikasi match.
-        // Sekarang: tunggu response, jika match_status === 'matched' tampilkan popup & redirect ke Messages.
-        async function triggerAction(action, employerId, jobId) {
+        function triggerAction(action, employerId, jobId) {
             const card = document.getElementById('topCard');
             if(!card) return;
             
@@ -368,28 +216,12 @@
             revealContent.style.opacity = 1;
 
             currentJobs.shift(); 
-
-            try {
-                // FIX: await fetch agar bisa baca response-nya
-                const res = await fetch(`/api/swipe`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') },
-                    body: JSON.stringify({ employer_id: employerId, job_vacancy_id: jobId, action: action })
-                });
-                const data = await res.json();
-
-                // FIX: Jika match terjadi, tampilkan notifikasi lalu redirect ke Messages
-                if (data.match_status === 'matched') {
-                    setTimeout(() => {
-                        const goMsg = confirm('🎉 IT\'S A MATCH! Perusahaan ini juga tertarik dengan profil Anda!\nMau langsung buka Messages sekarang?');
-                        if (goMsg) window.location.href = '{{ route("messages.index") }}';
-                        else renderTopCard();
-                    }, 400);
-                    return; // Jangan lanjut renderTopCard dulu, tunggu konfirmasi user
-                }
-            } catch(e) {
-                console.error('Swipe API error:', e);
-            }
+            
+            fetch(`/api/swipe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') },
+                body: JSON.stringify({ employer_id: employerId, job_vacancy_id: jobId, action: action })
+            });
             
             setTimeout(() => { renderTopCard(); }, 350);
         }
@@ -451,9 +283,6 @@
             window.addEventListener('mouseup', onEnd);
             window.addEventListener('touchend', onEnd);
         }
-
-        // Jalankan fetch pertama kali
-        fetchJobs();
     </script>
 </body>
 </html>

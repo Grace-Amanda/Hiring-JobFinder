@@ -14,6 +14,7 @@
         }
         
         body, html { margin: 0; padding: 0; background: var(--bg-dark); color: var(--text-light); font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+
         body { background: linear-gradient(135deg, #0f0f13 0%, #1a1a24 100%); }
         
         .bg-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
@@ -45,7 +46,6 @@
         }
         
         .document-status { display: block; margin-top: 8px; font-size: 13px; color: #4ade80; font-weight: 500; }
-        .text-error { display: block; margin-top: 8px; font-size: 13px; color: #f87171; font-weight: 500; }
 
         .btn-save { 
             width: 100%; padding: 16px; background: var(--gradient-orange); color: white; 
@@ -64,7 +64,6 @@
         .btn-logout:hover { background: rgba(248, 113, 113, 0.1); border-color: #f87171; }
 
         .alert-success { background: rgba(74, 222, 128, 0.1); color: #4ade80; padding: 15px 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(74, 222, 128, 0.2); font-weight: 500; font-size: 15px;}
-        .alert-danger { background: rgba(248, 113, 113, 0.1); color: #f87171; padding: 15px 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(248, 113, 113, 0.2); font-weight: 500; font-size: 15px;}
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(19, 19, 26, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border-dark); display: flex; justify-content: space-around; padding: 20px 0 calc(20px + env(safe-area-inset-bottom)); z-index: 50; }
         .bottom-nav a { color: var(--text-muted); font-size: 22px; transition: 0.3s; }
@@ -88,9 +87,9 @@
     <header class="top-nav">
         <div class="logo">Hiring</div>
         <div class="desktop-menu">
-            <a href="{{ url('/applicant/home') }}">Discover</a>            
-            <a href="{{ url('/applicant/calendar') }}">Calendar</a>
+            <a href="{{ url('/applicant/home') }}">Discover</a>
             <a href="{{ route('messages.index') }}">Messages</a>
+            <a href="{{ url('/applicant/calendar') }}">Calendar</a>
             <a href="{{ url('/applicant/profile') }}" class="active">Profile</a>
         </div>
     </header>
@@ -102,50 +101,52 @@
             </div>
         @endif
 
-        @if($errors->any())
-            <div class="alert-danger">
-                <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i> Gagal menyimpan profil. Cek kembali data Anda.
-            </div>
-        @endif
-
         <div class="profile-card">
             <h2 style="margin-top: 0; margin-bottom: 25px; color: var(--text-light); font-weight: 800; font-size: 24px; letter-spacing: -0.5px;">Data Diri Pelamar</h2>
             
             <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                @method('PUT') 
                 
+                <div class="form-group" style="text-align: center; margin-bottom: 25px;">
+                    <label style="display: block; text-align: center; margin-bottom: 12px;">Foto Profil Pelamar</label>
+                    <div style="margin-bottom: 15px;">
+                        @if(!empty($profile->profile_photo))
+                            <img src="{{ asset('storage/' . $profile->profile_photo) }}" alt="Foto Profil" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-orange); box-shadow: 0 4px 15px rgba(255,81,47,0.3);">
+                        @else
+                            <div style="width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.05); display: inline-flex; justify-content: center; align-items: center; border: 2px dashed var(--border-dark);">
+                                <i class="fas fa-user" style="font-size: 45px; color: var(--text-muted);"></i>
+                            </div>
+                        @endif
+                    </div>
+                    <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png" style="width: auto; max-width: 100%; display: inline-block; padding: 10px 15px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                </div>
+
                 <div class="form-group">
                     <label>Status Pencarian Kerja</label>
                     <select name="status">
-                        <option value="active_searching" {{ old('status', $profile->status ?? '') == 'active_searching' ? 'selected' : '' }}>Aktif Mencari Kerja</option>
-                        <option value="unactive" {{ old('status', $profile->status ?? '') == 'unactive' ? 'selected' : '' }}>Tidak Aktif</option>
+                        <option value="active_searching" {{ ($profile->status ?? '') == 'active_searching' ? 'selected' : '' }}>Aktif Mencari Kerja</option>
+                        <option value="unactive" {{ ($profile->status ?? '') == 'unactive' ? 'selected' : '' }}>Tidak Aktif (Istirahat)</option>
                     </select>
-                    @error('status') <span class="text-error">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
                     <label>Nama Lengkap</label>
-                    <input type="text" name="full_name" value="{{ old('full_name', $profile->full_name ?? Auth::user()->name) }}" required>
-                    @error('full_name') <span class="text-error">{{ $message }}</span> @enderror
+                    <input type="text" name="full_name" value="{{ $profile->full_name ?? Auth::user()->name }}" required>
                 </div>
 
                 <div class="form-group">
                     <label>Universitas / Pendidikan Terakhir</label>
-                    <input type="text" name="education" value="{{ old('education', $profile->education ?? '') }}" placeholder="Contoh: Univ. A - Informatika">
-                    @error('education') <span class="text-error">{{ $message }}</span> @enderror
+                    <input type="text" name="education" value="{{ $profile->education ?? '' }}" placeholder="Contoh: Univ. A - Informatika">
                 </div>
 
                 <div class="form-group">
                     <label>Lokasi / Kota Domisili</label>
-                    <input type="text" name="location_applicant" value="{{ old('location_applicant', $profile->location_applicant ?? '') }}" placeholder="Contoh: Surabaya">
-                    @error('location_applicant') <span class="text-error">{{ $message }}</span> @enderror
+                    <input type="text" name="location_applicant" value="{{ $profile->location_applicant ?? '' }}" placeholder="Contoh: Surabaya">
                 </div>
 
                 <div class="form-group">
                     <label>Riwayat & Keahlian (Job History)</label>
-                    <textarea name="job_history" rows="4" placeholder="Ceritakan keahlian dan pengalaman Anda...">{{ old('job_history', $profile->job_history ?? '') }}</textarea>
-                    @error('job_history') <span class="text-error">{{ $message }}</span> @enderror
+                    <textarea name="job_history" rows="4" placeholder="Ceritakan keahlian dan pengalaman Anda...">{{ $profile->job_history ?? '' }}</textarea>
                 </div>
 
                 <div class="form-group">
@@ -154,7 +155,6 @@
                     @if(isset($profile->document_ktp))
                         <small class="document-status"><i class="fas fa-check-circle"></i> KTP sudah terunggah.</small>
                     @endif
-                    @error('document_ktp') <span class="text-error">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
@@ -163,7 +163,6 @@
                     @if(isset($profile->document_ijazah))
                         <small class="document-status"><i class="fas fa-check-circle"></i> Ijazah sudah terunggah.</small>
                     @endif
-                    @error('document_ijazah') <span class="text-error">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-group">
@@ -172,7 +171,6 @@
                     @if(isset($profile->document_cv))
                         <small class="document-status"><i class="fas fa-check-circle"></i> CV sudah terunggah.</small>
                     @endif
-                    @error('document_cv') <span class="text-error">{{ $message }}</span> @enderror
                 </div>
 
                 <button type="submit" class="btn-save"><i class="fas fa-save"></i> Simpan Profil</button>
@@ -187,7 +185,6 @@
 
     <nav class="bottom-nav">
         <a href="{{ url('/applicant/home') }}"><i class="fas fa-layer-group"></i></a>
-        <a href="{{ url('/applicant/calendar') }}"><i class="fas fa-calendar-alt"></i></a>
         <a href="{{ route('messages.index') }}"><i class="fas fa-comment-dots"></i></a>
         <a href="{{ url('/applicant/profile') }}" class="active"><i class="fas fa-user"></i></a>
     </nav>

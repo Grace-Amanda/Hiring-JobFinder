@@ -10,10 +10,10 @@ class EmployerProfile extends Model {
     protected $fillable = [
         'user_id', 'status', 'company_name', 'location_employer', 
         'company_type', 'rating', 'reviews', 
-        'document_npwp', 'document_nib'
+        'document_npwp', 'document_nib', 'profile_photo'
     ];
     
     public function user() { 
         return $this->belongsTo(User::class); 
-        }
+    }
 }

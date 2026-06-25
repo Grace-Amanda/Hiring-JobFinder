@@ -12,9 +12,9 @@ class SwipeController extends Controller
 {
     public function recordSwipe(Request $request) 
     {
-        // 1. Validasi yang fleksibel (Karena kadang ngirim employer_id, kadang applicant_id tergantung siapa yang login)
+        // 1. PERBAIKAN: Hapus 'exists:job_vacancies,id' agar dummy ID dari Employer tidak memicu error 422
         $request->validate([
-            'job_vacancy_id' => 'required|exists:job_vacancies,id',
+            'job_vacancy_id' => 'required',
             'action'         => 'required|in:like,reject'
         ]);
 
@@ -25,21 +25,21 @@ class SwipeController extends Controller
         // 2. Tentukan ID secara dinamis berdasarkan Role
         if ($user->role === 'applicant') {
             $applicantId = $user->id;
-            // Applicant harus mengirim employer_id dari frontend
             $employerId = $request->employer_id; 
         } else {
             $employerId = $user->id;
-            // Employer harus mengirim applicant_id dari frontend
             $applicantId = $request->applicant_id; 
         }
 
-        // 3. Cek apakah relasi swipe ini sudah pernah ada sebelumnya
+        // 3. PERBAIKAN UTAMA: Cari data swipe yang berstatus 'pending' antar kedua user ini 
+        // agar tidak sengaja mengambil baris data sampah/uji coba lama di database
         $swipe = Swipe::where('applicant_id', $applicantId)
-                      ->where('job_vacancy_id', $job_vacancy_id)
+                      ->where('employer_id', $employerId)
+                      ->where('status', 'pending')
                       ->first();
 
         $match_status = 'pending';
-        $swipe_id     = null;  // FIX BUG #2: tambah variabel swipe_id untuk dikembalikan ke frontend
+        $swipe_id     = null;  // FIX BUG #2: Tetap mempertahankan variabel milikmu
 
         // --- SKENARIO A: JIKA REJECT ---
         if ($action === 'reject') {
@@ -60,20 +60,29 @@ class SwipeController extends Controller
         // --- SKENARIO B: JIKA LIKE ---
         else {
             if ($swipe) {
-                // Jika sudah ada record, dan statusnya pending (pihak lain sudah like duluan)
+                // Jika ditemukan data 'pending' dari pihak sebelah, maka sukses MATCH!
                 if ($swipe->status === 'pending') {
-                    $swipe->update(['status' => 'matched']);
+                    
+                    // Logika proteksi ID Lowongan Kerja: 
+                    // Jika yang swipe kedua adalah applicant, gunakan job_vacancy_id asli dari applicant.
+                    // Jika yang swipe kedua adalah employer, pertahankan job_vacancy_id asli yang sudah dibuat applicant sebelumnya.
+                    $finalJobId = $user->role === 'applicant' ? $job_vacancy_id : $swipe->job_vacancy_id;
+
+                    $swipe->update([
+                        'status' => 'matched',
+                        'job_vacancy_id' => $finalJobId
+                    ]);
+                    
                     $match_status = 'matched';
                     $swipe_id     = $swipe->id;
 
-                    // BONUS: Otomatis buat pesan pembuka saat Match!
+                    // Otomatis buat pesan pembuka di sistem chat saat Match terjadi
                     Message::create([
                         'swipe_id'  => $swipe->id,
-                        'sender_id' => $employerId, // Seolah-olah perusahaan yang menyapa
+                        'sender_id' => $employerId, // Perusahaan otomatis menyapa pelamar
                         'message'   => 'Selamat! Profil Anda cocok dengan kriteria lowongan kami. Mari diskusikan jadwal wawancara.'
                     ]);
                 } else {
-                    // Jika sebelumnya rejected, biarkan tetap rejected (tidak bisa maksa match)
                     $match_status = $swipe->status;
                     $swipe_id     = $swipe->id;
                 }

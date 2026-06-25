@@ -4,18 +4,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\JobVacancyController;
+use App\Http\Controllers\CalendarController; // TAMBAHAN: Impor CalendarController
 use Illuminate\Support\Facades\Auth;
 
 // 1. Rute Default Pintar (Deteksi sesi login)
 Route::get('/', function () {
-    // Jika sudah login, arahkan sesuai rolenya
     if (Auth::check()) {
         $role = Auth::user()->role;
         if ($role === 'applicant') return redirect('/applicant/home');
         if ($role === 'employer') return redirect('/employer/dashboard');
     }
-    
-    // Jika belum login, arahkan ke halaman login
     return redirect('/login');
 });
 
@@ -31,11 +29,8 @@ Route::middleware('guest')->group(function () {
 // 3. RUTE TERAUTENTIKASI (Hanya bisa diakses jika SUDAH login)
 Route::middleware('auth')->group(function () {
     
-    // Fitur Global (Bisa dipakai semua role)
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    
-    // PERBAIKAN: Mengarah ke view 'chat.message' sesuai nama file di folder-mu
     Route::get('/messages', function () { return view('chat.message'); })->name('messages.index');
 
     // --- AREA ADMIN ---
@@ -46,8 +41,6 @@ Route::middleware('auth')->group(function () {
     // --- AREA APPLICANT ---
     Route::middleware('role:applicant')->prefix('applicant')->group(function () {
         Route::get('/home', function () { return view('applicant.home'); });
-        
-        // Rute halaman profil Applicant (Dilengkapi sistem proteksi firstOrCreate)
         Route::get('/profile', function () { 
             $profile = \App\Models\ApplicantProfile::firstOrCreate(
                 ['user_id' => Auth::id()],
@@ -55,18 +48,15 @@ Route::middleware('auth')->group(function () {
             );
             return view('applicant.profile', compact('profile')); 
         });
-
-        // Kalender di sisi applicant
-        Route::get('/calendar', function () {
-            return view('applicant.calendar');
-        });
+        Route::get('/calendar', function () { return view('applicant.calendar'); });
     });
 
     // --- AREA EMPLOYER ---
     Route::middleware('role:employer')->prefix('employer')->group(function () {
         Route::get('/dashboard', function () { return view('employer.dashboard'); });
         
-        // Rute halaman profil Employer (Dilengkapi sistem proteksi firstOrCreate)
+        Route::get('/jobs', [JobVacancyController::class, 'index'])->name('jobs.index');
+        
         Route::get('/profile', function () { 
             $profile = \App\Models\EmployerProfile::firstOrCreate(
                 ['user_id' => Auth::id()],
@@ -75,18 +65,12 @@ Route::middleware('auth')->group(function () {
             return view('employer.profile', compact('profile')); 
         });
 
-        // Kalender di sisi Employer (PERBAIKAN: Mengambil data kandidat Matched)
-        Route::get('/calendar', function () {
-            $matches = \App\Models\Swipe::with(['applicant.applicantProfile'])
-                ->where('employer_id', Auth::id())
-                ->where('status', 'matched')
-                ->get();
-            return view('employer.calendar', compact('matches'));
-        });
+        // PERBAIKAN: Diarahkan ke CalendarController agar data looping dropdown candidate terisi sempurna
+        Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
         
-        // PERBAIKAN: CRUD Lowongan dimasukkan kembali ke dalam area Employer
         Route::post('/jobs', [JobVacancyController::class, 'store'])->name('jobs.store');
         Route::put('/jobs/{id}', [JobVacancyController::class, 'update'])->name('jobs.update');
         Route::delete('/jobs/{id}', [JobVacancyController::class, 'destroy'])->name('jobs.destroy');
+        Route::post('/jobs/{id}/toggle', [JobVacancyController::class, 'toggle'])->name('jobs.toggle');
     });
 });

@@ -95,7 +95,7 @@
         <div class="logo">Hiring <span>Employer</span></div>
         <div class="desktop-menu">
             <a href="{{ url('/employer/dashboard') }}">Candidates</a>
-            <a href="{{ url('/employer/calendar') }}" class="active">Calendar</a>
+            <a href="{{ url('/employer/jobs') }}">Jobs</a> <a href="{{ url('/employer/calendar') }}" class="active">Calendar</a>
             <a href="{{ route('messages.index') }}">Messages</a>
             <a href="{{ url('/employer/profile') }}">Profile</a>
         </div>
@@ -138,16 +138,16 @@
             <div class="form-group">
                 <label>Nama Kandidat</label>
                 <select id="inputCandidate" required>
-                    <option value="" disabled selected>-- Pilih Kandidat Matched --</option>
-                    @foreach($matches as $match)
-                        @if($match->applicant)
-                            @php
-                                $candidateName = $match->applicant->applicantProfile->full_name ?? $match->applicant->name;
-                            @endphp
-                            <option value="{{ $candidateName }}">{{ $candidateName }}</option>
-                        @endif
-                    @endforeach
-                </select>
+                <option value="" disabled selected>-- Pilih Kandidat Matched --</option>
+                @foreach($matches as $match)
+                    @if($match->applicant)
+                        @php
+                            $candidateName = $match->applicant->applicantProfile->full_name ?? $match->applicant->name;
+                        @endphp
+                        <option value="{{ $match->applicant_id }}">{{ $candidateName }}</option>
+                    @endif
+                @endforeach
+            </select>
             </div>
             <div class="form-group">
                 <label>Metode Wawancara</label>
@@ -169,7 +169,7 @@
 
     <nav class="bottom-nav">
         <a href="{{ url('/employer/dashboard') }}"><i class="fas fa-users"></i></a>
-        <a href="{{ url('/employer/calendar') }}" class="active"><i class="fas fa-calendar-alt"></i></a>
+        <a href="{{ url('/employer/jobs') }}"><i class="fas fa-briefcase"></i></a> <a href="{{ url('/employer/calendar') }}" class="active"><i class="fas fa-calendar-alt"></i></a>
         <a href="{{ route('messages.index') }}"><i class="fas fa-comment-dots"></i></a>
         <a href="{{ url('/employer/profile') }}"><i class="fas fa-building"></i></a>
     </nav>
@@ -185,11 +185,29 @@
             disableMobile: "true" 
         });
 
-        let schedules = {
-            "2026-06-25": [
-                { id: 1, time: "10:00", candidate: "Budi Santoso", type: "Online (Google Meet)", location: "meet.google.com/abc" }
-            ]
-        };
+        // 1. Ambil token API penjelajah yang tersimpan saat login
+        const apiToken = localStorage.getItem('api_token');
+
+        // 2. Inisialisasi schedules menjadi objek kosong (Data asli akan ditarik dari database)
+        let schedules = {};
+
+        // 3. Fungsi Baru: Memuat semua jadwal interview resmi dari database server MySQL
+        async function loadSchedulesFromServer() {
+            try {
+                let response = await fetch('/api/interviews', {
+                    headers: { 'Authorization': 'Bearer ' + apiToken }
+                });
+                if (response.ok) {
+                    let result = await response.json();
+                    // Sinkronkan data terformat dari database server ke kalender browser
+                    schedules = result.data || {};
+                    renderCalendar();
+                    renderSchedules();
+                }
+            } catch (error) {
+                console.error("Gagal menarik data jadwal dari server:", error);
+            }
+        }
 
         let currentDate = new Date(); 
         let selectedDateStr = "";
@@ -278,40 +296,75 @@
         }
         function closeModal() { document.getElementById('scheduleModal').style.display = 'none'; }
 
-        function saveSchedule() {
+        // 4. PERBAIKAN FUNGSI SIMPAN: Menyimpan permanen ke Database via API
+        async function saveSchedule() {
             let time = document.getElementById('inputTime').value;
-            let cand = document.getElementById('inputCandidate').value;
+            let selectEl = document.getElementById('inputCandidate');
+            let applicantId = selectEl.value;
+            let candidateName = selectEl.options[selectEl.selectedIndex].text;
             let type = document.getElementById('inputType').value;
             let loc = document.getElementById('inputLocation').value;
 
-            if(!time || !cand) { alert("Wajib mengisi Jam dan Nama Kandidat!"); return; }
+            if(!time || !applicantId) { alert("Wajib mengisi Jam dan Nama Kandidat!"); return; }
 
-            if(!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
-            
-            schedules[selectedDateStr].push({
-                id: Date.now(), time: time, candidate: cand, type: type, location: loc
-            });
+            try {
+                let response = await fetch('/api/interviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiToken
+                    },
+                    body: JSON.stringify({
+                        schedule_date: selectedDateStr,
+                        schedule_time: time,
+                        applicant_id: applicantId,
+                        candidate_name: candidateName,
+                        interview_type: type,
+                        location_or_link: loc
+                    })
+                });
 
-            closeModal();
-            renderCalendar();
-            renderSchedules();
-            
-            document.getElementById('inputTime').value = '';
-            document.getElementById('inputCandidate').value = '';
-            document.getElementById('inputLocation').value = '';
-        }
-
-        function deleteSchedule(id) {
-            if(confirm('Apakah Anda yakin ingin membatalkan dan menghapus jadwal ini?')) {
-                schedules[selectedDateStr] = schedules[selectedDateStr].filter(s => s.id !== id);
-                renderCalendar();
-                renderSchedules();
+                if (response.ok) {
+                    closeModal();
+                    await loadSchedulesFromServer(); // Muat ulang data terbaru dari database
+                    
+                    // Bersihkan form input
+                    document.getElementById('inputTime').value = '';
+                    document.getElementById('inputCandidate').value = '';
+                    document.getElementById('inputLocation').value = '';
+                } else {
+                    alert("Gagal menyimpan jadwal ke server database.");
+                }
+            } catch (error) {
+                console.error("Error saving schedule:", error);
             }
         }
 
+        // 5. PERBAIKAN FUNGSI HAPUS: Menghapus record fisik di Server Database
+        async function deleteSchedule(id) {
+            if(confirm('Apakah Anda yakin ingin membatalkan dan menghapus jadwal ini?')) {
+                try {
+                    let response = await fetch(`/api/interviews/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + apiToken }
+                    });
+                    if (response.ok) {
+                        await loadSchedulesFromServer(); // Muat ulang visual kalender resmi
+                    } else {
+                        alert("Gagal menghapus jadwal di server.");
+                    }
+                } catch (error) {
+                    console.error("Error deleting schedule:", error);
+                }
+            }
+        }
+
+        // Ambil penanggalan hari ini secara otomatis saat pertama buka halaman
         let todayStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`;
         selectDate(todayStr);
 
+        // Jalankan sinkronisasi data server saat halaman terbuka
+        loadSchedulesFromServer();
     </script>
 </body>
 </html>
