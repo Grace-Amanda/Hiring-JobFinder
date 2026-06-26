@@ -102,10 +102,17 @@
         </div>
     </header>
 
+    @php
+        $profile = \App\Models\ApplicantProfile::where('user_id', Auth::id())->first();
+        $isProfileComplete = $profile && $profile->document_cv && $profile->document_ktp;
+    @endphp
+
+    @if(!$isProfileComplete)
     <div class="profile-alert" id="profileAlert" style="display: none;">
         <div><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> <strong>Profil Belum Lengkap!</strong> Unggah CV dan KTP agar lamaran Anda bisa diproses oleh HRD.</div>
         <a href="{{ url('/applicant/profile') }}">Lengkapi Sekarang</a>
     </div>
+    @endif
 
     <div class="search-section" style="margin-top: 20px;">
         <div class="search-box">
