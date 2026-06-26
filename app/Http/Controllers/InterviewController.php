@@ -16,26 +16,6 @@ class InterviewController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'employer') {
-<<<<<<< HEAD
-            // FIX: employer lihat SEMUA interview miliknya kecuali cancelled
-            // Ini mencakup status 'offered' (slot dikirim via chat, menunggu applicant pilih)
-            // dan 'scheduled' (applicant sudah konfirmasi) agar keduanya tampil di kalender
-            $interviews = Interview::with(['applicant.applicantProfile', 'jobVacancy'])
-                ->where('employer_id', $user->id)
-                ->whereNotIn('status', ['cancelled'])
-                ->orderBy('schedule_date', 'asc')
-                ->orderBy('schedule_time', 'asc')
-                ->get();
-        } else {
-            // Applicant hanya lihat slot yang sudah 'scheduled' (dipilih) atau 'offered' (ditawarkan)
-            // Tidak tampilkan yang 'cancelled'
-            $interviews = Interview::with(['employer.employerProfile', 'jobVacancy'])
-                ->where('applicant_id', $user->id)
-                ->whereNotIn('status', ['cancelled'])
-                ->orderBy('schedule_date', 'asc')
-                ->orderBy('schedule_time', 'asc')
-                ->get();
-=======
             $interviews = Interview::with(['applicant.applicantProfile', 'jobVacancy'])
             ->where('employer_id', $user->id)
             ->orderBy('schedule_date', 'asc')
@@ -47,7 +27,6 @@ class InterviewController extends Controller
             ->orderBy('schedule_date', 'asc')
             ->orderBy('schedule_time', 'asc')
             ->get();
->>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
         }
 
         return response()->json(['status' => 'success', 'data' => $interviews]);

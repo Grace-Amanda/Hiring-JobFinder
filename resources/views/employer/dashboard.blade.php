@@ -15,7 +15,6 @@
         .shape2{bottom:0;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle,rgba(240,152,25,.15) 0%,transparent 60%)}
         .grid-pattern{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px}
         
-        /* STANDAR LOGO & NAV */
         .top-nav{padding:20px 5%;display:flex;justify-content:space-between;align-items:center;z-index:10;position:relative}
         .logo{font-size:28px;font-weight:800;color:var(--primary-orange);letter-spacing:-1px;text-shadow:0 4px 10px rgba(255,81,47,.3);display:flex;align-items:baseline;gap:8px}
         .logo span{font-size:14px;font-weight:500;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
@@ -23,7 +22,6 @@
         .desktop-menu a{color:var(--text-muted);text-decoration:none;font-size:16px;font-weight:500;transition:.3s}
         .desktop-menu a.active,.desktop-menu a:hover{color:var(--text-light)}
 
-        /* SEARCH & FILTER AREA */
         .search-section { padding: 0 5% 30px; z-index: 10; position: relative; display: flex; justify-content: center; gap: 10px; max-width: 550px; margin: 20px auto 0; }
         .search-box { position: relative; flex: 1; }
         .search-box input { width: 100%; background: rgba(28, 28, 36, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-dark); border-radius: 16px; color: var(--text-light); padding: 14px 40px 14px 20px; font-size: 15px; outline: none; font-family: inherit; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.3); box-sizing: border-box;}
@@ -48,7 +46,7 @@
         
         .card{position:absolute;inset:0;background:var(--card-dark);border:1px solid rgba(255,255,255,.1);border-radius:30px;box-shadow:0 25px 50px -12px rgba(0,0,0,.8);display:flex;flex-direction:column;touch-action:none;cursor:grab;user-select:none;transition:transform .4s ease,opacity .4s ease;z-index:2;overflow:hidden}
         .card:active{cursor:grabbing}
-        .card-visual{height:50%;background:#27272a url('https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop') center/cover;position:relative}
+        .card-visual{height:50%;background-color:#27272a;background-position:center;background-size:cover;position:relative}
         .card-visual::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:60%;background:linear-gradient(to top,var(--card-dark),transparent)}
         .rating-badge{position:absolute;top:20px;right:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);padding:8px 15px;border-radius:20px;font-weight:800;color:#f09819;border:1px solid rgba(255,255,255,.1);z-index:10}
         
@@ -74,7 +72,6 @@
         .bottom-nav a{color:var(--text-muted);font-size:22px;transition:.3s;text-decoration:none}
         .bottom-nav a.active{color:var(--primary-orange)}
 
-        /* MODAL FILTER CSS */
         .filter-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100; display: none; justify-content: center; align-items: flex-end; }
         .filter-modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
         .filter-modal { background: var(--bg-dark); width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 30px; border-top: 1px solid var(--border-dark); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1); box-sizing: border-box;}
@@ -109,7 +106,7 @@
         <div class="logo">Hiring <span>Employer</span></div>
         <div class="desktop-menu">
             <a href="{{ url('/employer/dashboard') }}" class="active">Candidates</a>
-            <a href="{{ url('/employer/calendar') }}">Calendar</a>
+            <a href="{{ url('/employer/jobs') }}">Jobs</a> <a href="{{ url('/employer/calendar') }}">Calendar</a>
             <a href="{{ route('messages.index') }}">Messages</a>
             <a href="{{ url('/employer/profile') }}">Profile</a>
         </div>
@@ -117,7 +114,6 @@
 
     @php
         $profile = \App\Models\EmployerProfile::where('user_id', Auth::id())->first();
-        // PERBAIKAN: Menggunakan document_nib sesuai penamaan di form profil Employer sebelumnya
         $isProfileComplete = $profile && $profile->document_npwp && $profile->document_nib;
     @endphp
 
@@ -200,7 +196,7 @@
 
     <nav class="bottom-nav">
         <a href="{{ url('/employer/dashboard') }}" class="active"><i class="fas fa-users"></i></a>
-        <a href="{{ url('/employer/calendar') }}"><i class="fas fa-calendar-alt"></i></a>
+        <a href="{{ url('/employer/jobs') }}"><i class="fas fa-briefcase"></i></a> <a href="{{ url('/employer/calendar') }}"><i class="fas fa-calendar-alt"></i></a>
         <a href="{{ route('messages.index') }}"><i class="fas fa-comment-dots"></i></a>
         <a href="{{ url('/employer/profile') }}"><i class="fas fa-building"></i></a>
     </nav>
@@ -208,7 +204,6 @@
     <script>
         @if(session('api_token')) localStorage.setItem('api_token', '{{ session('api_token') }}'); @endif
         
-        // HANYA JALANKAN JAVASCRIPT POP-UP JIKA PROFIL BELUM LENGKAP
         @if(!$isProfileComplete)
         setTimeout(() => {
             let alertBox = document.getElementById('profileAlert');
@@ -221,7 +216,6 @@
         const $rc = document.getElementById('revealContent');
         const $inp = document.getElementById('searchInput');
 
-        // Modal Filter Elements
         const filterModal = document.getElementById('filterModal');
         const btnOpenFilter = document.getElementById('btnOpenFilter');
         const btnCloseFilter = document.getElementById('btnCloseFilter');
@@ -229,14 +223,12 @@
         const btnResetFilter = document.getElementById('btnResetFilter');
         const filterIndicator = document.getElementById('filterIndicator');
 
-        // Event Listeners untuk Modal
         btnOpenFilter.addEventListener('click', () => filterModal.classList.add('active'));
         btnCloseFilter.addEventListener('click', () => filterModal.classList.remove('active'));
         filterModal.addEventListener('click', (e) => {
             if(e.target === filterModal) filterModal.classList.remove('active');
         });
 
-        // Event Listener Pencarian & Filter
         $inp.addEventListener('keyup', (e) => { if(e.key === 'Enter') fetchCands(); });
         
         btnApplyFilter.addEventListener('click', () => {
@@ -252,14 +244,12 @@
             fetchCands();
         });
 
-        // FUNGSI FETCH KANDIDAT DENGAN FILTER
         const fetchCands = async () => {
             let keyword = $inp.value;
             let location = document.getElementById('filterLocation').value;
             let rating = document.getElementById('filterRating').value;
             let education = document.getElementById('filterEducation').value;
 
-            // Indikator aktif jika filter digunakan
             if(location || rating || education) {
                 filterIndicator.style.display = 'block';
                 btnOpenFilter.classList.add('active');
@@ -268,7 +258,6 @@
                 btnOpenFilter.classList.remove('active');
             }
 
-            // Membangun URL Query Parameters
             let queryParams = new URLSearchParams();
             if (keyword) queryParams.append('keyword', keyword);
             if (location) queryParams.append('location', location);
@@ -286,25 +275,23 @@
             } catch (e) { console.error("API Error:", e); }
         };
 
-        // ─── FIX BUG #3 & #4: renderCard sekarang menyertakan job_vacancy_id dari kartu ───
-        // Sebelumnya hanya kirim user_id saja, sehingga job_vacancy_id selalu pakai dummyJobId=1 (hardcoded).
-        // Sekarang setiap kartu membawa job_vacancy_id dinamis dari data kandidat.
-        // Namun karena SearchController mengembalikan ApplicantProfile (bukan JobVacancy),
-        // kita ambil job_vacancy_id dari swipe yang matched antara kandidat & employer ini.
-        // Solusi sederhana & tidak merusak: gunakan job.id dari data swipe yang dikembalikan API,
-        // atau fallback ke dummyJobId jika belum ada. Data kandidat sudah punya field user_id.
-        // Untuk memastikan match bisa terjadi, kita tetap kirim applicant_id + job_vacancy_id
-        // yang sudah ada di data kandidat (field job_vacancy_id ditambah di SearchController — lihat fix SearchController).
         const renderCard = () => {
             $dw.innerHTML = ''; $rc.style.opacity = 0;
             if (!cands.length) return $dw.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin-top:50%;font-family:inherit"><span style="font-size:60px;display:block;margin-bottom:10px">📭</span><h2 style="font-size:28px;font-weight:800;color:var(--text-light);margin:0 0 10px">Kosong!</h2><p style="font-size:15px">Tidak ada kandidat sesuai kriteria Anda.</p></div>`;
             
             let a = cands[0];
-            // FIX: Ambil job_vacancy_id dari data kandidat jika tersedia, fallback ke dummyJobId
             let jobId = a.job_vacancy_id || dummyJobId;
+
+            // PERBAIKAN: Logika penarik file gambar asli pelamar dari direktori /storage/
+            let candidatePhoto = a.profile_photo 
+                ? `/storage/${a.profile_photo}` 
+                : 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop';
+
             $dw.innerHTML = `
                 <div class="card" id="topCard">
-                    <div class="card-visual"><div class="rating-badge">★ ${a.rating}</div></div>
+                    <div class="card-visual" style="background-image: url('${candidatePhoto}')">
+                        <div class="rating-badge">★ ${a.rating}</div>
+                    </div>
                     <div class="card-content">
                         <div class="company-label">${a.education || 'Education not set'}</div>
                         <h2 class="job-title">${a.full_name || a.user.name}</h2>
@@ -319,9 +306,6 @@
             initDrag(document.getElementById('topCard'), a.user_id, jobId);
         };
 
-        // ─── FIX BUG #3: act() sekarang async, handle response, tampilkan popup match ───
-        // Sebelumnya: fetch tidak di-await, response tidak dibaca, tidak ada notifikasi match.
-        // Sekarang: tunggu response, jika match_status === 'matched' tampilkan popup & arahkan ke Messages.
         const act = async (action, uId, jobId) => {
             let $c = document.getElementById('topCard'); if(!$c) return;
             $c.classList.add(action === 'like' ? 'swipe-out-right' : 'swipe-out-left');
@@ -330,7 +314,6 @@
             cands.shift();
 
             try {
-                // FIX: await fetch agar bisa baca response-nya
                 const res = await fetch(`/api/swipe`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('api_token') }, 
@@ -338,14 +321,13 @@
                 });
                 const data = await res.json();
 
-                // FIX: Jika match terjadi, tampilkan notifikasi lalu redirect ke Messages
                 if (data.match_status === 'matched') {
                     setTimeout(() => {
                         const goMsg = confirm('🎉 IT\'S A MATCH! Kandidat ini tertarik dengan lowongan Anda.\nMau langsung buka Messages sekarang?');
                         if (goMsg) window.location.href = '{{ route("messages.index") }}';
                         else renderCard();
                     }, 400);
-                    return; // Jangan lanjut renderCard dulu, tunggu konfirmasi user
+                    return;
                 }
             } catch(e) {
                 console.error('Swipe API error:', e);
@@ -354,7 +336,6 @@
             setTimeout(renderCard, 350);
         };
 
-        // ─── FIX BUG #4: initDrag sekarang menerima & meneruskan jobId ───
         const initDrag = ($c, uId, jobId) => {
             let drag = false, start = 0, cur = 0, th = 120;
             const evX = e => e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
@@ -372,7 +353,6 @@
             const endDrag = () => {
                 if(!drag) return; drag = false; let diff = cur - start;
                 $c.style.transition = 'transform .4s cubic-bezier(.175,.885,.32,1.275), opacity .4s';
-                // FIX: teruskan jobId ke act()
                 if(Math.abs(diff) > th) act(diff > 0 ? 'like' : 'reject', uId, jobId);
                 else { $c.style.transform = 'none'; $rc.style.opacity = 0; }
             };
@@ -382,7 +362,6 @@
             window.addEventListener('mouseup', endDrag); window.addEventListener('touchend', endDrag);
         };
 
-        // Initialize First Fetch
         fetchCands();
     </script>
 </body>

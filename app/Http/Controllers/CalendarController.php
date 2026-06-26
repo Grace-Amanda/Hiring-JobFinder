@@ -22,4 +22,14 @@ class CalendarController extends Controller
 
         return view('employer.calendar', compact('matches'));
     }
+<<<<<<< HEAD
 }
+=======
+    public function applicantIndex()
+    {
+        // Tidak perlu kirim data (JS yang fetch via API)
+        // tapi pastikan user login dan punya token di session
+        return view('applicant.calendar');
+    }
+};
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4

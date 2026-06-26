@@ -25,6 +25,9 @@
         .auth-logo { font-size: 32px; font-weight: 800; color: var(--primary-orange); letter-spacing: -1px; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(255,81,47,0.3); }
         .auth-subtitle { color: var(--text-muted); font-size: 15px; }
 
+        .alert-danger { background: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; color: #f87171; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
+        .alert-danger ul { margin: 0; padding-left: 20px; }
+
         .form-group { margin-bottom: 20px; position: relative; }
         .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
         .form-group input, .form-group select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark); border-radius: 12px; color: var(--text-light); font-size: 15px; font-family: inherit; box-sizing: border-box; transition: all 0.3s ease; outline: none; }
@@ -56,18 +59,29 @@
             <div class="auth-subtitle">Start your career journey today.</div>
         </div>
 
-        <form action="{{ route('register') }}" method="POST">
+        @if ($errors->any())
+            <div class="alert-danger">
+                <strong>Pendaftaran Gagal:</strong>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <div class="form-group">
                 <label>Full Name</label>
-                <input type="text" name="name" placeholder="John Doe" required autofocus>
+                <input type="text" name="name" placeholder="John Doe" value="{{ old('name') }}" required autofocus>
                 <i class="fas fa-user"></i>
             </div>
 
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" name="email" placeholder="name@email.com" required>
+                <input type="email" name="email" placeholder="name@email.com" value="{{ old('email') }}" required>
                 <i class="fas fa-envelope"></i>
             </div>
 
@@ -87,11 +101,17 @@
                 <label>Register As</label>
                 <select name="role" required style="padding-left: 45px; appearance: none;">
                     <option value="" disabled selected>Select your role</option>
-                    <option value="applicant">Applicant (Job Seeker)</option>
-                    <option value="employer">Employer (Company)</option>
+                    <option value="applicant" {{ old('role') == 'applicant' ? 'selected' : '' }}>Applicant (Job Seeker)</option>
+                    <option value="employer" {{ old('role') == 'employer' ? 'selected' : '' }}>Employer (Company)</option>
                 </select>
                 <i class="fas fa-briefcase" style="top: 41px;"></i>
                 <i class="fas fa-chevron-down" style="position: absolute; left: auto; right: 18px; top: 43px; pointer-events: none;"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Profile Photo (JPG/PNG max 2MB)</label>
+                <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png" required style="padding-left: 45px; padding-top: 13px;">
+                <i class="fas fa-image" style="top: 43px;"></i>
             </div>
 
             <button type="submit" class="btn-submit">Create Account</button>

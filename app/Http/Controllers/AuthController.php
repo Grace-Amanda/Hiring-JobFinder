@@ -37,7 +37,6 @@ class AuthController extends Controller
             $user = Auth::user();
             
             // Membuat API Token untuk kebutuhan fetch JavaScript di frontend (Swipe Card)
-            // Pastikan model User Anda menggunakan trait HasApiTokens (Sanctum)
             if (method_exists($user, 'createToken')) {
                 $token = $user->createToken('api_token')->plainTextToken;
                 session(['api_token' => $token]);
@@ -72,17 +71,24 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // 1. Validasi input
+        // 1. Validasi input (Ditambahkan validasi wajib foto profil)
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:applicant,employer',
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         try {
             // Memulai Transaksi Database (Biar aman kalau ada error)
             DB::beginTransaction();
+
+            // Simpan file foto profil fisik ke folder storage
+            $photoPath = null;
+            if ($request->hasFile('profile_photo')) {
+                $photoPath = $request->file('profile_photo')->store('profile_photos', 'public');
+            }
 
             // 2. Buat akun User baru
             $user = User::create([
@@ -92,19 +98,21 @@ class AuthController extends Controller
                 'role' => $request->role,
             ]);
 
-            // 3. Buat profil dasar
+            // // 3. Buat profil dasar beserta path foto profil
             if ($request->role === 'applicant') {
                 ApplicantProfile::create([
                     'user_id' => $user->id,
                     'full_name' => $user->name,
-                    'status' => 'active_searching',
-                    'rating' => 0.00
+                    'status' => 'active_searching', // <-- UBAH BAGIAN INI DARI 'active'
+                    'rating' => 0.00,
+                    'profile_photo' => $photoPath
                 ]);
             } else {
                 EmployerProfile::create([
                     'user_id' => $user->id,
                     'company_name' => $user->name,
-                    'status' => 'active_searching'
+                    'status' => 'active_searching', // <-- UBAH JUGA BAGIAN INI DARI 'active'
+                    'profile_photo' => $photoPath
                 ]);
             }
 
@@ -125,7 +133,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Pengecekan aman: Hapus token API HANYA jika usernya ada DAN tokennya juga ada
         if ($request->user() && $request->user()->currentAccessToken()) {
             $request->user()->currentAccessToken()->delete();
         }

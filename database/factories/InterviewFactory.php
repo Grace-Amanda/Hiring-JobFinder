@@ -12,7 +12,7 @@ class InterviewFactory extends Factory
             'schedule_date' => fake()->dateTimeBetween('now', '+2 weeks')->format('Y-m-d'),
             'schedule_time' => fake()->time('H:i'), // Format jam dan menit (HH:MM)
             'location_or_link' => fake()->url(), // Menghasilkan link tautan virtual meeting
-            'status' => fake()->randomElement(['scheduled', 'completed', 'canceled']),
+            'status' => fake()->randomElement(['scheduled', 'completed', 'cancelled', 'confirmed']),
         ];
     }
 }

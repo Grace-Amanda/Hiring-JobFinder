@@ -11,7 +11,7 @@ class ApplicantProfile extends Model {
     protected $fillable = [
         'user_id', 'status', 'full_name', 'date_of_birth', 
         'location_applicant', 'education', 'rating', 'job_history', 
-        'document_ktp', 'document_ijazah', 'document_cv'
+        'document_ktp', 'document_ijazah', 'document_cv', 'profile_photo'
     ];
 
     public function user() { 

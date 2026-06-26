@@ -147,6 +147,7 @@
     <div class="logo">Hiring <span>Employer</span></div>
     <div class="desktop-menu">
         <a href="{{ url('/employer/dashboard') }}">Candidates</a>
+        <a href="{{ url('/employer/jobs') }}">Jobs</a>
         <a href="{{ url('/employer/calendar') }}">Calendar</a>
         <a href="{{ route('messages.index') }}" class="active">Messages</a>
         <a href="{{ url('/employer/profile') }}">Profile</a>
@@ -184,9 +185,15 @@
                 <div class="header-actions">
                     @if(auth()->user()->role === 'employer')
                     {{-- Tombol Kirim Slot Interview --}}
+<<<<<<< HEAD
                     {{-- <button class="btn-send-slot" onclick="openSendSlotModal()">
                         <i class="fas fa-calendar-plus"></i> Kirim Slot
                     </button> --}}
+=======
+                    <button class="btn-send-slot" onclick="openSendSlotModal()">
+                        <i class="fas fa-calendar-plus"></i> Kirim Slot
+                    </button>
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                     {{-- Tombol ke Kalender --}}
                     <a href="{{ url('/employer/calendar') }}" class="btn-schedule">
                         <i class="far fa-calendar-check"></i> Kalender
@@ -433,6 +440,7 @@
         // Simpan curSwipeId lokal agar tidak berubah saat polling async selesai
         const swipeIdSnapshot = curSwipeId;
         try {
+<<<<<<< HEAD
             const res = await fetch(`/api/messages/${swipeIdSnapshot}`, { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN } });
             if (!res.ok) return;
             let payload = await res.json();
@@ -440,6 +448,14 @@
             // Hanya render jika masih di chat yang sama (user belum pindah ke chat lain)
             if (curSwipeId === swipeIdSnapshot) renderMessages(msgs, swipeIdSnapshot);
         } catch (e) { console.error('fetchMessages error:', e); }
+=======
+            const res = await fetch(`/api/messages/${curSwipeId}`, { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN } });
+            if (!res.ok) return;
+            let payload = await res.json();
+            const msgs = Array.isArray(payload) ? payload : (payload.data || []);
+            renderMessages(msgs);
+        } catch (e) {}
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
     }
 
     function renderMessages(msgs, swipeIdForBtn) {
@@ -453,6 +469,7 @@
             const isMine = m.sender_id == MY_ID;
             const time   = new Date(m.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
+<<<<<<< HEAD
             // ── FIX BUG #1: Parse JSON dengan sanitasi lebih robust ──────────────
             // Bug lama: JSON.parse gagal silent jika string mengandung karakter
             // yang di-escape ganda oleh PHP/Laravel (misal \" atau \\").
@@ -482,10 +499,21 @@
             } else if (parsed && parsed.type === 'slot_selected') {
                 renderSlotSelectedBubble(parsed, isMine, time);
                 // Popup hanya muncul untuk employer, dan hanya saat pertama kali pesan ini muncul
+=======
+            // Cek apakah pesan adalah tipe khusus (JSON)
+            let parsed = null;
+            try { parsed = JSON.parse(m.message); } catch(e) {}
+
+            if (parsed && parsed.type === 'interview_slots') {
+                renderSlotBubble(parsed, isMine, time, m.id);
+            } else if (parsed && parsed.type === 'slot_selected') {
+                renderSlotSelectedBubble(parsed, isMine, time);
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                 if (USER_ROLE === 'employer' && !isMine) {
                     showEmployerPopup(parsed);
                 }
             } else {
+<<<<<<< HEAD
                 // ── FIX BUG #3: Pesan teks biasa yang TERLIHAT seperti JSON tapi bukan ──
                 // Jika parsed berhasil tapi tidak punya .type yang dikenali,
                 // tetap tampilkan sebagai teks biasa (bukan JSON mentah).
@@ -495,17 +523,28 @@
                 const displayText = raw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 $messagesBox.insertAdjacentHTML('beforeend',
                     `<div class="message-bubble ${cls}">${displayText}<span class="time-stamp">${time}</span></div>`
+=======
+                const cls  = isMine ? 'message-outgoing' : 'message-incoming';
+                const safe = m.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                $messagesBox.insertAdjacentHTML('beforeend',
+                    `<div class="message-bubble ${cls}">${safe}<span class="time-stamp">${time}</span></div>`
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                 );
             }
         });
         if (hasNew) $messagesBox.scrollTop = $messagesBox.scrollHeight;
     }
 
+<<<<<<< HEAD
     function renderSlotBubble(parsed, isMine, time, msgId, swipeIdForBtn) {
         const count = parsed.slot_count || parsed.interview_ids?.length || 0;
         // Gunakan swipeIdForBtn (snapshot saat pesan diterima), bukan curSwipeId
         // agar tombol "Lihat & Pilih Jadwal" selalu membuka slot yang benar
         const swipeForModal = swipeIdForBtn || curSwipeId;
+=======
+    function renderSlotBubble(parsed, isMine, time, msgId) {
+        const count = parsed.slot_count || parsed.interview_ids?.length || 0;
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
         if (isMine) {
             $messagesBox.insertAdjacentHTML('beforeend', `
                 <div class="slot-bubble outgoing">
@@ -514,13 +553,20 @@
                     <span class="time-stamp" style="text-align:right;display:block;opacity:.5;font-size:10px">${time}</span>
                 </div>`);
         } else {
+<<<<<<< HEAD
             // Cek apakah slot ini sudah pernah dipilih (ada pesan slot_selected setelahnya)
             // Jika sudah dipilih, tampilkan tombol disabled
+=======
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
             $messagesBox.insertAdjacentHTML('beforeend', `
                 <div class="slot-bubble" id="slotBubble_${msgId}">
                     <div class="slot-bubble-title"><i class="fas fa-calendar-alt"></i> Undangan Interview!</div>
                     <div class="slot-bubble-desc">HRD telah mengirimkan <strong>${count} pilihan jadwal</strong> interview. Silakan pilih waktu yang paling sesuai.</div>
+<<<<<<< HEAD
                     <button class="btn-view-slots" onclick="openViewSlotModal(${swipeForModal})">
+=======
+                    <button class="btn-view-slots" onclick="openViewSlotModal(${curSwipeId})">
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                         <i class="fas fa-calendar-check"></i> Lihat & Pilih Jadwal
                     </button>
                     <span class="time-stamp" style="opacity:.5;font-size:10px;margin-top:8px">${time}</span>

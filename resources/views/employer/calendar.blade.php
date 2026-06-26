@@ -104,6 +104,7 @@
         <div class="logo">Hiring <span>Employer</span></div>
         <div class="desktop-menu">
             <a href="{{ url('/employer/dashboard') }}">Candidates</a>
+            <a href="{{ url('/employer/jobs') }}">Jobs</a>
             <a href="{{ url('/employer/calendar') }}" class="active">Calendar</a>
             <a href="{{ route('messages.index') }}">Messages</a>
             <a href="{{ url('/employer/profile') }}">Profile</a>
@@ -201,14 +202,18 @@
                     schedules = {};
                     if(result.data && Array.isArray(result.data)) {
                         result.data.forEach(item => {
+<<<<<<< HEAD
                             // Tampilkan semua kecuali cancelled:
                             // 'offered'   = menunggu applicant pilih
                             // 'scheduled' = applicant sudah konfirmasi slot ini
                             // 'confirmed' / 'completed' = tahap lanjut
+=======
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                             if(item.status === 'cancelled') return;
 
                             let date = item.schedule_date;
                             if (!schedules[date]) schedules[date] = [];
+<<<<<<< HEAD
 
                             let candName = item.applicant
                                 ? (item.applicant.applicant_profile?.full_name || item.applicant.name)
@@ -223,6 +228,17 @@
                                 location:  item.location_or_link,
                                 notes:     item.notes || '',
                                 status:    item.status
+=======
+                            
+                            let candName = item.applicant ? (item.applicant.applicant_profile?.full_name || item.applicant.name) : 'Kandidat';
+                            
+                            schedules[date].push({
+                                id: item.id,
+                                time: item.schedule_time,
+                                candidate: candName,
+                                type: item.interview_type === 'online' ? 'Online' : 'Offline',
+                                location: item.location_or_link
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                             });
                         });
                     }
@@ -310,7 +326,11 @@
                 const canCancel = sch.status !== 'completed';
 
                 html += `
+<<<<<<< HEAD
                     <div class="schedule-card ${sch.status === 'scheduled' ? 'card-confirmed' : ''}">
+=======
+                    <div class="schedule-card">
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                         <div class="schedule-time">${sch.time.substring(0, 5)}</div>
                         <div class="schedule-info">
                             <h4>${sch.candidate}</h4>
@@ -320,7 +340,11 @@
                             <span class="status-badge ${badge.cls}">${badge.label}</span>
                         </div>
                         <div class="schedule-actions">
+<<<<<<< HEAD
                             ${canCancel ? `<button onclick="deleteSchedule(${sch.id})" title="Batalkan Jadwal"><i class="fas fa-times-circle"></i> Batal</button>` : ''}
+=======
+                            <button onclick="deleteSchedule(${sch.id})" title="Batalkan Jadwal"><i class="fas fa-times-circle"></i> Batal</button>
+>>>>>>> 1dfed048c39597dc8ff61442f39ec279595b40e4
                         </div>
                     </div>
                 `;
