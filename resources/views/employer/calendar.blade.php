@@ -74,7 +74,6 @@
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-orange); }
         .form-group select option { background: var(--bg-dark); color: white; }
         
-        /* Modifikasi untuk Input Waktu */
         .time-input-wrapper { position: relative; }
         .time-input-wrapper i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;}
         
@@ -87,6 +86,16 @@
         .bottom-nav a { color: var(--text-muted); font-size: 22px; transition: 0.3s; }
         .bottom-nav a.active { color: var(--primary-orange); }
         @media (min-width: 768px) { .bottom-nav { display: none; } .desktop-menu { display: flex; } }
+
+        /* ── Status Badge di Employer Calendar ── */
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-top: 6px; }
+        .badge-offered   { background: rgba(240,152,25,.15); color: #f09819; border: 1px solid rgba(240,152,25,.35); }
+        .badge-scheduled { background: rgba(74,222,128,.15);  color: #4ade80; border: 1px solid rgba(74,222,128,.35); }
+        .badge-confirmed { background: rgba(59,130,246,.15);  color: #60a5fa; border: 1px solid rgba(59,130,246,.35); }
+        .badge-completed { background: rgba(161,161,170,.15); color: #a1a1aa; border: 1px solid rgba(161,161,170,.35); }
+        /* Card hijau subtle saat applicant sudah konfirmasi */
+        .card-confirmed  { border-color: rgba(74,222,128,.3) !important; }
+        .card-confirmed:hover { border-color: rgba(74,222,128,.6) !important; }
     </style>
 </head>
 <body>
@@ -138,16 +147,16 @@
             <div class="form-group">
                 <label>Nama Kandidat</label>
                 <select id="inputCandidate" required>
-                    <option value="" disabled selected>-- Pilih Kandidat Matched --</option>
-                    @foreach($matches as $match)
-                        @if($match->applicant)
-                            @php
-                                $candidateName = $match->applicant->applicantProfile->full_name ?? $match->applicant->name;
-                            @endphp
-                            <option value="{{ $candidateName }}">{{ $candidateName }}</option>
-                        @endif
-                    @endforeach
-                </select>
+                <option value="" disabled selected>-- Pilih Kandidat Matched --</option>
+                @foreach($matches as $match)
+                    @if($match->applicant)
+                        @php
+                            $candidateName = $match->applicant->applicantProfile->full_name ?? $match->applicant->name;
+                        @endphp
+                        <option value="{{ $match->applicant_id }}|{{ $match->job_vacancy_id }}">{{ $candidateName }}</option>
+                    @endif
+                @endforeach
+            </select>
             </div>
             <div class="form-group">
                 <label>Metode Wawancara</label>
@@ -176,20 +185,55 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Inisialisasi Time Picker Modern
-        flatpickr("#inputTime", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            disableMobile: "true" 
-        });
+        flatpickr("#inputTime", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true, disableMobile: "true" });
 
-        let schedules = {
-            "2026-06-25": [
-                { id: 1, time: "10:00", candidate: "Budi Santoso", type: "Online (Google Meet)", location: "meet.google.com/abc" }
-            ]
-        };
+        const apiToken = localStorage.getItem('api_token');
+        let schedules = {};
+
+        async function loadSchedulesFromServer() {
+            try {
+                let response = await fetch('/api/interviews', {
+                    headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + apiToken }
+                });
+                if (response.ok) {
+                    let result = await response.json();
+                    
+                    schedules = {};
+                    if(result.data && Array.isArray(result.data)) {
+                        result.data.forEach(item => {
+                            // Tampilkan semua kecuali cancelled:
+                            // 'offered'   = menunggu applicant pilih
+                            // 'scheduled' = applicant sudah konfirmasi slot ini
+                            // 'confirmed' / 'completed' = tahap lanjut
+                            if(item.status === 'cancelled') return;
+
+                            let date = item.schedule_date;
+                            if (!schedules[date]) schedules[date] = [];
+
+                            let candName = item.applicant
+                                ? (item.applicant.applicant_profile?.full_name || item.applicant.name)
+                                : 'Kandidat';
+
+                            // FIX: simpan status agar card bisa tampilkan badge yang benar
+                            schedules[date].push({
+                                id:        item.id,
+                                time:      item.schedule_time,
+                                candidate: candName,
+                                type:      item.interview_type === 'online' ? 'Online' : 'Offline',
+                                location:  item.location_or_link,
+                                notes:     item.notes || '',
+                                status:    item.status
+                            });
+                        });
+                    }
+                    
+                    renderCalendar();
+                    renderSchedules();
+                }
+            } catch (error) {
+                console.error("Gagal menarik data jadwal:", error);
+            }
+        }
 
         let currentDate = new Date(); 
         let selectedDateStr = "";
@@ -198,7 +242,6 @@
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-            
             document.getElementById('monthYearDisplay').innerText = `${monthNames[month]} ${year}`;
             
             const firstDayIndex = new Date(year, month, 1).getDay();
@@ -206,11 +249,9 @@
             const prevLastDay = new Date(year, month, 0).getDate();
             
             let daysHTML = "";
-
             for (let x = firstDayIndex; x > 0; x--) {
                 daysHTML += `<div class="day prev-date">${prevLastDay - x + 1}</div>`;
             }
-
             for (let i = 1; i <= lastDay; i++) {
                 let checkDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 let hasEventClass = schedules[checkDateStr] && schedules[checkDateStr].length > 0 ? 'has-event' : '';
@@ -218,7 +259,6 @@
 
                 daysHTML += `<div class="day ${activeClass} ${hasEventClass}" onclick="selectDate('${checkDateStr}')">${i}</div>`;
             }
-
             document.getElementById('calendarDays').innerHTML = daysHTML;
         }
 
@@ -230,10 +270,8 @@
         function selectDate(dateStr) {
             selectedDateStr = dateStr;
             renderCalendar(); 
-            
             const d = new Date(dateStr);
             document.getElementById('selectedDateDisplay').innerText = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-            
             renderSchedules();
         }
 
@@ -255,16 +293,34 @@
 
             let html = "";
             dailySchedules.forEach(sch => {
+                // FIX: tentukan label & warna badge berdasarkan status
+                // 'offered'   = slot dikirim, menunggu applicant konfirmasi
+                // 'scheduled' = applicant SUDAH pilih slot ini → tampilkan badge hijau
+                // 'confirmed' = dikonfirmasi manual
+                // 'completed' = selesai
+                const statusMap = {
+                    offered:   { label: 'Menunggu Konfirmasi', cls: 'badge-offered' },
+                    scheduled: { label: 'Dikonfirmasi ✓',      cls: 'badge-scheduled' },
+                    confirmed: { label: 'Terkonfirmasi',        cls: 'badge-confirmed' },
+                    completed: { label: 'Selesai',              cls: 'badge-completed' },
+                };
+                const badge    = statusMap[sch.status] || { label: sch.status, cls: 'badge-offered' };
+                const typeIcon = sch.type === 'Online' ? 'fa-video' : 'fa-building';
+                // Tombol batal hanya muncul jika belum selesai
+                const canCancel = sch.status !== 'completed';
+
                 html += `
-                    <div class="schedule-card">
-                        <div class="schedule-time">${sch.time}</div>
+                    <div class="schedule-card ${sch.status === 'scheduled' ? 'card-confirmed' : ''}">
+                        <div class="schedule-time">${sch.time.substring(0, 5)}</div>
                         <div class="schedule-info">
                             <h4>${sch.candidate}</h4>
-                            <p><i class="fas fa-video"></i> ${sch.type}</p>
-                            <p><i class="fas fa-map-marker-alt"></i> ${sch.location}</p>
+                            <p><i class="fas fa-briefcase"></i> ${sch.type}</p>
+                            <p><i class="fas ${typeIcon}"></i> ${sch.location}</p>
+                            ${sch.notes ? `<p><i class="fas fa-sticky-note"></i> ${sch.notes}</p>` : ''}
+                            <span class="status-badge ${badge.cls}">${badge.label}</span>
                         </div>
                         <div class="schedule-actions">
-                            <button onclick="deleteSchedule(${sch.id})" title="Hapus Jadwal"><i class="fas fa-trash-alt"></i></button>
+                            ${canCancel ? `<button onclick="deleteSchedule(${sch.id})" title="Batalkan Jadwal"><i class="fas fa-times-circle"></i> Batal</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -278,40 +334,89 @@
         }
         function closeModal() { document.getElementById('scheduleModal').style.display = 'none'; }
 
-        function saveSchedule() {
+        // Mencegah Glitch dengan validasi dan header Accept: application/json
+        async function saveSchedule() {
             let time = document.getElementById('inputTime').value;
-            let cand = document.getElementById('inputCandidate').value;
+            let selectEl = document.getElementById('inputCandidate');
+            let rawValue = selectEl.value; 
+            let candidateName = selectEl.options[selectEl.selectedIndex]?.text || '';
             let type = document.getElementById('inputType').value;
             let loc = document.getElementById('inputLocation').value;
 
-            if(!time || !cand) { alert("Wajib mengisi Jam dan Nama Kandidat!"); return; }
+            if(!time || !rawValue) { 
+                alert("Wajib mengisi Jam dan Nama Kandidat!"); 
+                return; 
+            }
 
-            if(!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
-            
-            schedules[selectedDateStr].push({
-                id: Date.now(), time: time, candidate: cand, type: type, location: loc
-            });
+            let splitData = rawValue.split('|');
+            let applicantId = splitData[0];
+            let jobVacId = splitData[1] || 1; // Fallback aman agar database tidak error
 
-            closeModal();
-            renderCalendar();
-            renderSchedules();
-            
-            document.getElementById('inputTime').value = '';
-            document.getElementById('inputCandidate').value = '';
-            document.getElementById('inputLocation').value = '';
+            try {
+                let response = await fetch('/api/interviews', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json', // Mencegah crash jika server melempar error non-JSON
+                        'Authorization': 'Bearer ' + apiToken 
+                    },
+                    body: JSON.stringify({
+                        schedule_date: selectedDateStr,
+                        schedule_time: time,
+                        applicant_id: applicantId,
+                        job_vacancy_id: jobVacId,
+                        candidate_name: candidateName,
+                        interview_type: type.includes('Online') ? 'online' : 'offline',
+                        location_or_link: loc
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    await loadSchedulesFromServer();
+                    
+                    document.getElementById('inputTime').value = '';
+                    document.getElementById('inputCandidate').value = '';
+                    document.getElementById('inputLocation').value = '';
+                } else {
+                    // Mengambil pesan error dari JSON
+                    let errText = await response.text();
+                    try {
+                        let err = JSON.parse(errText);
+                        alert("Gagal menyimpan: " + (err.message || 'Data tidak lengkap.'));
+                    } catch(e) {
+                        alert("Gagal menyimpan. Pastikan job vacancy id tersedia.");
+                    }
+                }
+            } catch (error) {
+                console.error("Kesalahan jaringan:", error);
+            }
         }
 
-        function deleteSchedule(id) {
-            if(confirm('Apakah Anda yakin ingin membatalkan dan menghapus jadwal ini?')) {
-                schedules[selectedDateStr] = schedules[selectedDateStr].filter(s => s.id !== id);
-                renderCalendar();
-                renderSchedules();
+        async function deleteSchedule(id) {
+            if(confirm('Apakah Anda yakin ingin membatalkan jadwal ini?')) {
+                try {
+                    let response = await fetch(`/api/interviews/${id}/cancel`, {
+                        method: 'POST',
+                        headers: { 
+                            'Accept': 'application/json',
+                            'Authorization': 'Bearer ' + apiToken 
+                        }
+                    });
+                    if (response.ok) {
+                        await loadSchedulesFromServer(); 
+                    } else {
+                        alert("Gagal membatalkan jadwal.");
+                    }
+                } catch (error) {
+                    console.error("Error deleting schedule:", error);
+                }
             }
         }
 
         let todayStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`;
         selectDate(todayStr);
-
+        loadSchedulesFromServer();
     </script>
 </body>
 </html>
