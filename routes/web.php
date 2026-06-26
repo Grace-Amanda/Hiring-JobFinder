@@ -48,7 +48,7 @@ Route::middleware('auth')->group(function () {
             );
             return view('applicant.profile', compact('profile')); 
         });
-        Route::get('/calendar', function () { return view('applicant.calendar'); });
+        Route::get('/calendar', [CalendarController::class, 'applicantIndex'])->name('applicant.calendar');
     });
 
     // --- AREA EMPLOYER ---

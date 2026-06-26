@@ -78,6 +78,7 @@
         <div class="logo">Hiring <span>Employer</span></div>
         <div class="desktop-menu">
             <a href="{{ url('/employer/dashboard') }}">Candidates</a>
+            <a href="{{ url('/employer/jobs') }}">Jobs</a>
             <a href="{{ url('/employer/calendar') }}">Calendar</a>
             <a href="{{ route('messages.index') }}">Messages</a>
             <a href="{{ url('/employer/profile') }}" class="active">Profile</a>

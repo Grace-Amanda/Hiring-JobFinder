@@ -130,26 +130,74 @@
     </nav>
 
     <script>
+        // ── Token Sanctum dari session Laravel ──────────────────────────
+        const API_TOKEN = '{{ session('api_token') }}';
+
         const $ = id => document.getElementById(id);
-        const mos = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const fmt = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        
-        let slots = {
-            "2026-06-25": [
-                { id: 102, time: "14:00", company: "PT Teknologi Jaya", type: "On-site (Office)", is_booked: true }
-            ]
-        };
+        const mos = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const fmt = (y, m, d) => `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+        let slots = {};   // ← kosong dulu, diisi dari API
         let cur = new Date(), selDate = "";
 
+        // ── FETCH jadwal dari database ───────────────────────────────────
+        async function loadInterviews() {
+            try {
+                const res = await fetch('/api/interviews', {
+                    headers: {
+                        'Authorization': 'Bearer ' + API_TOKEN,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!res.ok) {
+                    console.error('Gagal fetch interviews, status:', res.status);
+                    return;
+                }
+
+                const json = await res.json();
+                slots = {};
+
+                (json.data || []).forEach(iv => {
+                    if (iv.status === 'cancelled') return; // skip yang dibatalkan
+
+                    const dateKey = iv.schedule_date; // "YYYY-MM-DD"
+                    if (!slots[dateKey]) slots[dateKey] = [];
+
+                    // Ambil nama perusahaan dari relasi employer.employerProfile
+                    const companyName = iv.employer?.employer_profile?.company_name
+                                    ?? iv.employer?.employerProfile?.company_name
+                                    ?? 'Perusahaan';
+
+                    slots[dateKey].push({
+                        id:        iv.id,
+                        time:      iv.schedule_time.substring(0, 5), // "HH:MM"
+                        company:   companyName,
+                        type:      iv.interview_type === 'online' ? 'Online (Video Call)' : 'On-site (Office)',
+                        location:  iv.location_or_link,
+                        status:    iv.status,
+                        // scheduled = sudah dipilih/dikonfirmasi employer, confirmed = applicant sudah konfirmasi
+                        is_booked: iv.status === 'confirmed'
+                    });
+                });
+
+                renderCal();
+                sel(fmt(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()));
+
+            } catch (e) {
+                console.error('Error load interviews:', e);
+            }
+        }
+
+        // ── Render kalender ──────────────────────────────────────────────
         const renderCal = () => {
             let y = cur.getFullYear(), m = cur.getMonth();
             $('monthYearDisplay').innerText = `${mos[m]} ${y}`;
-            let fd = new Date(y, m, 1).getDay(), ld = new Date(y, m + 1, 0).getDate(), pd = new Date(y, m, 0).getDate();
+            let fd = new Date(y, m, 1).getDay(), ld = new Date(y, m+1, 0).getDate(), pd = new Date(y, m, 0).getDate();
             let h = "";
-            
             for (let x = fd; x > 0; x--) h += `<div class="day prev-date">${pd - x + 1}</div>`;
             for (let i = 1; i <= ld; i++) {
-                let d = fmt(y, m + 1, i), c = `${d === selDate ? 'active' : ''} ${slots[d]?.length ? 'has-event' : ''}`;
+                let d = fmt(y, m+1, i), c = `${d === selDate ? 'active' : ''} ${slots[d]?.length ? 'has-event' : ''}`;
                 h += `<div class="day ${c}" onclick="sel('${d}')">${i}</div>`;
             }
             $('calendarDays').innerHTML = h;
@@ -157,33 +205,72 @@
 
         const chgMo = dir => { cur.setMonth(cur.getMonth() + dir); renderCal(); };
 
+        // ── Tampilkan daftar jadwal per tanggal ──────────────────────────
         const sel = d => {
             selDate = d; renderCal();
-            let dt = new Date(d);
+            let dt = new Date(d + 'T00:00:00'); // fix timezone shift
             $('selectedDateDisplay').innerText = `${dt.getDate()} ${mos[dt.getMonth()]} ${dt.getFullYear()}`;
-            
+
             let s = slots[d] || [];
-            if (!s.length) return $('scheduleList').innerHTML = `<div class="empty-state"><i class="fas fa-inbox" style="font-size:30px; margin-bottom:10px; opacity:0.5"></i><br>Tidak ada tawaran wawancara di tanggal ini.</div>`;
-            
+            if (!s.length) {
+                $('scheduleList').innerHTML = `<div class="empty-state">
+                    <i class="fas fa-inbox" style="font-size:30px; margin-bottom:10px; opacity:0.5"></i><br>
+                    Tidak ada jadwal wawancara di tanggal ini.
+                </div>`;
+                return;
+            }
+
             $('scheduleList').innerHTML = s.sort((a, b) => a.time.localeCompare(b.time)).map(x => `
                 <div class="schedule-card">
                     <div class="schedule-time">${x.time}</div>
                     <div class="schedule-info">
-                        <h4>${x.company}</h4><p><i class="fas fa-video"></i> ${x.type}</p>
+                        <h4>${x.company}</h4>
+                        <p><i class="fas ${x.type.includes('Online') ? 'fa-video' : 'fa-building'}"></i> ${x.type}</p>
+                        <p style="margin-top:4px; color:#6b7280; font-size:11px;">
+                            <i class="fas fa-map-marker-alt"></i> ${x.location}
+                        </p>
                     </div>
-                    <div>${x.is_booked ? `<button class="btn-booked" disabled><i class="fas fa-check"></i> Booked</button>` : `<button class="btn-book" onclick="book(${x.id})">Book Slot</button>`}</div>
+                    <div>
+                        ${x.is_booked
+                            ? `<button class="btn-booked" disabled><i class="fas fa-check"></i> Confirmed</button>`
+                            : x.status === 'scheduled'
+                                ? `<button class="btn-book" onclick="book(${x.id})">Konfirmasi</button>`
+                                : `<span style="color:#a1a1aa; font-size:12px;">${x.status}</span>`
+                        }
+                    </div>
                 </div>
             `).join('');
         };
 
-        const book = id => {
-            if (confirm('Konfirmasi booking jadwal ini?')) {
-                slots[selDate].find(s => s.id === id).is_booked = true;
-                sel(selDate); alert('Jadwal berhasil dibooking!');
+        // ── Konfirmasi kehadiran → POST /api/interviews/{id}/confirm ─────
+        const book = async (id) => {
+            if (!confirm('Konfirmasi kehadiran untuk jadwal interview ini?')) return;
+
+            try {
+                const res = await fetch(`/api/interviews/${id}/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + API_TOKEN,
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+                    }
+                });
+
+                const json = await res.json();
+
+                if (res.ok && json.status === 'success') {
+                    alert('✅ Interview berhasil dikonfirmasi!');
+                    await loadInterviews(); // reload dari DB supaya status terupdate
+                } else {
+                    alert('Gagal konfirmasi: ' + (json.message ?? 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Terjadi error: ' + e.message);
             }
         };
 
-        sel(fmt(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()));
+        // ── Mulai load saat halaman siap ────────────────────────────────
+        loadInterviews();
     </script>
 </body>
 </html>
