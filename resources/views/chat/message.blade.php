@@ -230,7 +230,7 @@
 <div class="modal-overlay" id="sendSlotModal">
     <div class="modal-box">
         <h3 class="modal-title"><i class="fas fa-calendar-plus" style="color:var(--primary-orange)"></i> Kirim Slot Interview</h3>
-        <p class="modal-sub">Tambahkan satu atau beberapa pilihan jadwal untuk kandidat.</p>
+        <p class="modal-sub">Data ditarik otomatis dari kalender (jika ada). Anda juga bisa menambah jadwal baru.</p>
 
         <div id="slotFormContainer"></div>
 
@@ -319,7 +319,7 @@
     const $btnSend        = document.getElementById('btnSend');
 
     let curSwipeId       = null;
-    let curApplicantId   = null; // untuk employer kirim slot
+    let curApplicantId   = null; 
     let curJobVacancyId  = null;
     let pollTimer        = null;
     let loadedMsgIds     = new Set();
@@ -354,7 +354,7 @@
     // ── Kontak ──────────────────────────────────────────────────────────
     async function loadContacts() {
         try {
-            const res  = await fetch('/api/connections', { headers: { 'Authorization': 'Bearer ' + TOKEN } });
+            const res  = await fetch('/api/connections', { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN } });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data    = await res.json();
             renderContacts(data.matched || [], data.pending || []);
@@ -431,7 +431,7 @@
     async function fetchMessages() {
         if (!curSwipeId) return;
         try {
-            const res = await fetch(`/api/messages/${curSwipeId}`, { headers: { 'Authorization': 'Bearer ' + TOKEN } });
+            const res = await fetch(`/api/messages/${curSwipeId}`, { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN } });
             if (!res.ok) return;
             let payload = await res.json();
             const msgs = Array.isArray(payload) ? payload : (payload.data || []);
@@ -455,17 +455,13 @@
             try { parsed = JSON.parse(m.message); } catch(e) {}
 
             if (parsed && parsed.type === 'interview_slots') {
-                // Bubble slot interview
                 renderSlotBubble(parsed, isMine, time, m.id);
             } else if (parsed && parsed.type === 'slot_selected') {
-                // Bubble konfirmasi slot dipilih
                 renderSlotSelectedBubble(parsed, isMine, time);
-                // Jika employer, tampilkan popup notifikasi
                 if (USER_ROLE === 'employer' && !isMine) {
                     showEmployerPopup(parsed);
                 }
             } else {
-                // Pesan biasa
                 const cls  = isMine ? 'message-outgoing' : 'message-incoming';
                 const safe = m.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 $messagesBox.insertAdjacentHTML('beforeend',
@@ -479,7 +475,6 @@
     function renderSlotBubble(parsed, isMine, time, msgId) {
         const count = parsed.slot_count || parsed.interview_ids?.length || 0;
         if (isMine) {
-            // Employer: tampilkan bubble outgoing (sudah kirim)
             $messagesBox.insertAdjacentHTML('beforeend', `
                 <div class="slot-bubble outgoing">
                     <div class="slot-bubble-title"><i class="fas fa-calendar-plus"></i> Slot Interview Dikirim</div>
@@ -487,8 +482,6 @@
                     <span class="time-stamp" style="text-align:right;display:block;opacity:.5;font-size:10px">${time}</span>
                 </div>`);
         } else {
-            // Applicant: tampilkan bubble incoming dengan tombol
-            const ids = JSON.stringify(parsed.interview_ids);
             $messagesBox.insertAdjacentHTML('beforeend', `
                 <div class="slot-bubble" id="slotBubble_${msgId}">
                     <div class="slot-bubble-title"><i class="fas fa-calendar-alt"></i> Undangan Interview!</div>
@@ -528,7 +521,6 @@
         }
     }
 
-    // ── Pop up Notifikasi Employer ───────────────────────────────────────
     function showEmployerPopup(parsed) {
         const popup = document.getElementById('popupConfirm');
         if (!popup) return;
@@ -544,7 +536,6 @@
         document.getElementById('popupConfirm')?.classList.remove('active');
     }
 
-    // ── Kirim Pesan Biasa ────────────────────────────────────────────────
     async function sendMessage() {
         const txt = $msgInput.value.trim();
         if (!txt || !curSwipeId) return;
@@ -577,25 +568,61 @@
     $btnSend.addEventListener('click', sendMessage);
     $msgInput.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) sendMessage(); });
 
+
     // ═══════════════════════════════════════════════════════════════
-    // EMPLOYER: Modal Kirim Slot
+    // PERBAIKAN: EMPLOYER MENARIK DATA KALENDER KE MODAL CHAT
     // ═══════════════════════════════════════════════════════════════
-    function openSendSlotModal() {
+    async function openSendSlotModal() {
         if (!curSwipeId) { alert('Pilih percakapan dulu!'); return; }
+        
         slotCount = 0;
-        document.getElementById('slotFormContainer').innerHTML = '';
-        addSlotForm();
+        document.getElementById('slotFormContainer').innerHTML = `
+            <div style="text-align:center; padding: 20px; color: var(--text-muted);">
+                <i class="fas fa-spinner fa-spin" style="font-size:24px; margin-bottom:10px; display:block"></i> Menarik data dari Kalender...
+            </div>`;
         document.getElementById('sendSlotModal').classList.add('active');
+
+        try {
+            const res = await fetch('/api/interviews', { 
+                headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN } 
+            });
+            const json = await res.json();
+            
+            document.getElementById('slotFormContainer').innerHTML = '';
+            
+            // Mencari jadwal yang sudah di-book untuk kandidat ini
+            const existingSlots = json.data.filter(s => s.applicant_id == curApplicantId && s.status !== 'cancelled' && s.status !== 'completed');
+            
+            if (existingSlots.length > 0) {
+                existingSlots.forEach(s => {
+                    let timeFmt = s.schedule_time.length > 5 ? s.schedule_time.substring(0, 5) : s.schedule_time;
+                    addSlotForm(s.schedule_date, timeFmt, s.interview_type, s.location_or_link, s.notes);
+                });
+            } else {
+                addSlotForm(); // Tampilkan kosong jika belum ada
+            }
+        } catch(e) {
+            document.getElementById('slotFormContainer').innerHTML = '';
+            addSlotForm();
+        }
     }
+    
     function closeSendSlotModal() {
         document.getElementById('sendSlotModal').classList.remove('active');
     }
 
-    function addSlotForm() {
+    // Fungsi AddSlotForm diupdate agar menerima nilai default dari kalender
+    function addSlotForm(defDate='', defTime='', defType='online', defLoc='', defNotes='') {
         if (slotCount >= 5) { alert('Maksimal 5 slot!'); return; }
         slotCount++;
         const idx = slotCount;
         const today = new Date().toISOString().split('T')[0];
+        
+        defLoc = defLoc || '';
+        defNotes = defNotes || '';
+        let selOnline = defType === 'online' ? 'selected' : '';
+        let selOffline = defType === 'offline' ? 'selected' : '';
+
         document.getElementById('slotFormContainer').insertAdjacentHTML('beforeend', `
             <div class="slot-form" id="slotForm_${idx}">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -605,24 +632,24 @@
                 <div class="form-row">
                     <div>
                         <label>Tanggal *</label>
-                        <input type="date" id="slot_date_${idx}" min="${today}" required>
+                        <input type="date" id="slot_date_${idx}" min="${today}" value="${defDate}" required>
                     </div>
                     <div>
                         <label>Waktu *</label>
-                        <input type="time" id="slot_time_${idx}" required>
+                        <input type="time" id="slot_time_${idx}" value="${defTime}" required>
                     </div>
                 </div>
                 <label>Tipe Interview *</label>
                 <select id="slot_type_${idx}">
-                    <option value="online">🖥️ Online</option>
-                    <option value="offline">🏢 Offline</option>
+                    <option value="online" ${selOnline}>🖥️ Online</option>
+                    <option value="offline" ${selOffline}>🏢 Offline</option>
                 </select>
                 <label>Link / Lokasi *</label>
-                <input type="text" id="slot_loc_${idx}" placeholder="Contoh: https://meet.google.com/xxx atau Jl. Sudirman No.1" required>
+                <input type="text" id="slot_loc_${idx}" value="${defLoc}" placeholder="Contoh: https://meet.google.com/xxx atau Jl. Sudirman No.1" required>
                 <label>Catatan (opsional)</label>
-                <textarea id="slot_notes_${idx}" placeholder="Contoh: Bawa CV fisik, pakaian formal..."></textarea>
+                <textarea id="slot_notes_${idx}" placeholder="Contoh: Bawa CV fisik, pakaian formal...">${defNotes}</textarea>
             </div>`);
-        // Sembunyikan tombol tambah jika sudah 5
+        
         document.getElementById('addSlotBtn').style.display = slotCount >= 5 ? 'none' : 'flex';
     }
 
@@ -636,7 +663,6 @@
         const btn = document.getElementById('btnSendSlots');
         const slots = [];
 
-        // Kumpulkan semua slot yang ada
         const forms = document.querySelectorAll('[id^="slotForm_"]');
         for (const form of forms) {
             const idx = form.id.split('_')[1];
@@ -657,7 +683,7 @@
         try {
             const res = await fetch('/api/interviews/send-slots', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
                 body: JSON.stringify({
                     swipe_id: curSwipeId,
                     applicant_id: curApplicantId,
@@ -695,7 +721,7 @@
             </div>`;
         try {
             const res = await fetch(`/api/interviews/slots/${swipeId}`, {
-                headers: { 'Authorization': 'Bearer ' + TOKEN }
+                headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN }
             });
             const data = await res.json();
             renderSlotList(data.data || []);
@@ -736,7 +762,6 @@
     }
 
     function selectSlotItem(id, date, time, loc, type) {
-        // Reset semua
         document.querySelectorAll('.slot-item').forEach(el => el.classList.remove('selected'));
         selectedSlotId   = id;
         selectedSlotData = { id, schedule_date: date, schedule_time: time, location_or_link: loc, interview_type: type };
@@ -773,7 +798,7 @@
         try {
             const res = await fetch(`/api/interviews/${selectedSlotId}/select`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
             });
             const data = await res.json();
             if (res.ok && data.status === 'success') {
@@ -787,7 +812,6 @@
         }
     }
 
-    // ── Start ────────────────────────────────────────────────────────────
     if (!TOKEN) {
         $contactStatus.textContent = '⚠️ Sesi tidak valid. Silakan logout dan login ulang.';
     } else {
